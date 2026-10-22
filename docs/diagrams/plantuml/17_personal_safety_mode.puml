@@ -1,0 +1,21 @@
+@startuml
+start
+:Usuaria percibe riesgo inmediato;
+:Activar Personal Safety Mode;
+fork
+  :Aumentar temporalmente checkpoints;
+fork again
+  :Notificar contactos preseleccionados;
+fork again
+  :Iniciar Safety Journey / check-ins;
+end fork
+if (¿SOS o deja de responder?) then (sí)
+  :Escalar según política;
+  note right
+  No inferir delito ni acusar a terceros.
+  end note
+else (no)
+  :Finalizar modo y volver a muestreo normal;
+endif
+stop
+@enduml

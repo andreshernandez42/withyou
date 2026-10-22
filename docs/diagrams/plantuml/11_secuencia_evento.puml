@@ -1,0 +1,21 @@
+@startuml
+participant "Fuente oficial / TEST" as F
+participant Backend as B
+participant "Teléfono usuario" as U
+participant "Trusted Circle" as T
+participant Comunidad as C
+F -> B : evento
+B -> B : validar fuente + relevancia
+B -> U : check-in
+alt responde
+  U -> B : SAFE / HELP_REQUIRED / UNABLE_TO_EXIT
+  B -> T : notificación autorizada
+else no responde
+  B -> T : estado NO CONFIRMADO
+  opt política / quórum satisfecho
+    B -> C : Welfare Check zona aproximada
+    C -> B : verificación
+    B -> T : resultado actualizado
+  end
+end
+@enduml

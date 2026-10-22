@@ -1,0 +1,5 @@
+digraph G { rankdir=LR; node [shape=box,style="rounded,filled",fillcolor="#F3F6F8",color="#35526B",fontname="Arial"]; edge[color="#506A7A"];
+DB[label="PostgreSQL",shape=cylinder,fillcolor="#F6EACD"];
+Auth; Circle[label="Trusted Circle"]; Policy[label="Consent Policy"]; Vault[label="Location Vault"]; Event[label="Emergency Engine"]; Welfare[label="Welfare / Quorum"]; Cases[label="Cases / Institutional Ref"]; Safety[label="Personal Safety"]; N[label="Notifications"]; Audit; Adapters[label="Official Adapters"];
+Auth->DB; Circle->DB; Policy->DB; Vault->DB; Event->Vault; Event->N; Welfare->Policy; Welfare->N; Cases->DB; Safety->N; Audit->DB; Adapters->Event;
+}

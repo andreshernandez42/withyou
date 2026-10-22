@@ -1,0 +1,22 @@
+@startuml
+left to right direction
+rectangle "Amenaza / situación
+Sismo · deslizamiento · inundación
+seguridad personal · solicitud familiar" as A
+rectangle "Contexto
+¿Afecta al usuario?
+¿Qué política aplica?" as B
+rectangle "Verificación
+Estoy bien · Necesito ayuda
+No puedo salir · Sin respuesta" as C
+rectangle "Escalamiento
+Trusted Circle
+quórum N-de-M" as D
+rectangle "Apoyo
+Familia · comunidad · institución" as E
+A --> B --> C --> D --> E
+note bottom of C
+Mínima información útil + consentimiento previo
++ trazabilidad + expiración
+end note
+@enduml

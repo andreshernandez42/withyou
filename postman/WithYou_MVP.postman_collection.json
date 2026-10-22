@@ -1,0 +1,49 @@
+{
+  "info": {
+    "name": "With You - MVP",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {"key":"baseUrl","value":"http://localhost:8000/api/v1"},
+    {"key":"token","value":""},
+    {"key":"eventId","value":""},
+    {"key":"subjectUserId","value":""},
+    {"key":"welfareId","value":""}
+  ],
+  "item": [
+    {
+      "name":"01 - Login demo Andrés",
+      "request":{"method":"POST","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\"email\":\"andres@example.com\",\"password\":\"DemoAndres2026!\"}"},"url":{"raw":"{{baseUrl}}/auth/login","host":["{{baseUrl}}"],"path":["auth","login"]}},
+      "event":[{"listen":"test","script":{"exec":["const j=pm.response.json(); pm.collectionVariables.set('token',j.access_token);"]}}]
+    },
+    {
+      "name":"02 - Mi perfil",
+      "request":{"method":"GET","header":[{"key":"Authorization","value":"Bearer {{token}}"}],"url":{"raw":"{{baseUrl}}/me","host":["{{baseUrl}}"],"path":["me"]}}
+    },
+    {
+      "name":"03 - Crear checkpoint Bogotá",
+      "request":{"method":"POST","header":[{"key":"Authorization","value":"Bearer {{token}}"},{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\"latitude\":4.7110,\"longitude\":-74.0721,\"accuracy_m\":12,\"battery_pct\":80,\"network_type\":\"wifi\",\"movement_state\":\"MOVING\"}"},"url":{"raw":"{{baseUrl}}/checkpoints","host":["{{baseUrl}}"],"path":["checkpoints"]}}
+    },
+    {
+      "name":"04 - Simular sismo M6.6",
+      "request":{"method":"POST","header":[{"key":"Authorization","value":"Bearer {{token}}"},{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\"type\":\"EARTHQUAKE\",\"source\":\"TEST-SGC\",\"severity\":\"SEVERE\",\"certainty\":\"OBSERVED\",\"urgency\":\"IMMEDIATE\",\"latitude\":4.70,\"longitude\":-74.08,\"radius_km\":80,\"magnitude\":6.6,\"depth_km\":20}"},"url":{"raw":"{{baseUrl}}/test/emergency-events","host":["{{baseUrl}}"],"path":["test","emergency-events"]}},
+      "event":[{"listen":"test","script":{"exec":["const j=pm.response.json(); pm.collectionVariables.set('eventId',j.event_id);"]}}]
+    },
+    {
+      "name":"05 - Ver notificaciones",
+      "request":{"method":"GET","header":[{"key":"Authorization","value":"Bearer {{token}}"}],"url":{"raw":"{{baseUrl}}/notifications?pending_only=true","host":["{{baseUrl}}"],"path":["notifications"],"query":[{"key":"pending_only","value":"true"}]}}
+    },
+    {
+      "name":"06 - Responder Estoy a salvo",
+      "request":{"method":"POST","header":[{"key":"Authorization","value":"Bearer {{token}}"},{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\"status\":\"SAFE\",\"event_id\":\"{{eventId}}\"}"},"url":{"raw":"{{baseUrl}}/safety/respond","host":["{{baseUrl}}"],"path":["safety","respond"]}}
+    },
+    {
+      "name":"07 - Sincronizar SGC real",
+      "request":{"method":"POST","header":[{"key":"Authorization","value":"Bearer {{token}}"}],"url":{"raw":"{{baseUrl}}/events/sync/sgc","host":["{{baseUrl}}"],"path":["events","sync","sgc"]}}
+    },
+    {
+      "name":"08 - Preview SIRDEC Datos Abiertos",
+      "request":{"method":"GET","header":[{"key":"Authorization","value":"Bearer {{token}}"}],"url":{"raw":"{{baseUrl}}/official/sirdec/preview?limit=5","host":["{{baseUrl}}"],"path":["official","sirdec","preview"],"query":[{"key":"limit","value":"5"}]}}
+    }
+  ]
+}

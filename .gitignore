@@ -1,0 +1,16 @@
+.env
+.env.local
+*.db
+__pycache__/
+.pytest_cache/
+.dart_tool/
+.build/
+build/
+android/.gradle/
+ios/Pods/
+
+.env.demo
+LOCAL_DEMO_CREDENTIALS.txt
+
+.env.demo
+LOCAL_DEMO_CREDENTIALS.txt

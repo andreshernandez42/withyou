@@ -1,0 +1,12 @@
+@startuml
+left to right direction
+[MVP académico] --> [Desapariciones controladas
+SIRDEC Open Data]
+--> [NNA tras revisión
+ética/jurídica]
+--> [SIRDEC / Alerta Rosa
+API oficial]
+--> [P2P/DTN ampliado
+operadores/satélite]
+--> [Colombia → LatAm]
+@enduml

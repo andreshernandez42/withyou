@@ -1,0 +1,5 @@
+@startuml
+left to right direction
+[Evidencia] --> [Requisitos] --> [Diseño] --> [Construcción] --> [Evaluación] --> [Análisis]
+[Análisis] ..> [Requisitos] : iterar
+@enduml

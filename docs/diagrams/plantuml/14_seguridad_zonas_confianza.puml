@@ -1,0 +1,21 @@
+@startuml
+left to right direction
+rectangle "Zona pública
+Fuentes oficiales / Internet" as P
+rectangle "Perímetro
+TLS · rate limit · WAF" as E
+rectangle "API autenticada
+RBAC/ABAC · Policy Engine" as A
+rectangle "Zona sensible
+Vault cifrado · KMS" as V
+rectangle "Auditoría
+logs inmutables · alertas" as L
+rectangle "Legal / Institutional Gateway" as G
+P --> E --> A --> V
+A --> L
+A ..> G
+note bottom of A
+Amenazas: stalking, cuenta comprometida,
+SIM swap, scraping, spoofing, DoS, insider.
+end note
+@enduml

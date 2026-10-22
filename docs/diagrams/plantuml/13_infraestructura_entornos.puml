@@ -1,0 +1,21 @@
+@startuml
+node "DEV / TEST en PC" {
+  node "Docker Compose" {
+    [Nginx]
+    [FastAPI A]
+    [FastAPI B]
+    database "PostgreSQL + PostGIS" as PG
+    [Redis / Worker]
+  }
+}
+node "Arquitectura objetivo" {
+  node "Región A · multi-AZ" as A
+  node "Región B · DR" as B
+  database "Datos replicados" as R
+  artifact "Backup aislado" as K
+  [Observabilidad] as O
+  A --> R
+  B --> R
+  R --> K
+}
+@enduml

@@ -1,0 +1,22 @@
+@startuml
+rectangle "Checkpoint A
+08:00 → expira +24 h" as A
+rectangle "Checkpoint B
+08:15 → expira +24 h" as B
+rectangle "Checkpoint C
+08:30 → expira +24 h" as C
+rectangle "Checkpoint D
+08:45 → expira +24 h" as D
+A -right-> B -right-> C -right-> D
+D --> "Worker TTL"
+if "¿Incidente legítimo?" then
+  --> [sí] "Incident Hold temporal
+causa + actor + expiración + auditoría"
+else
+  --> [no] "Eliminar checkpoint vencido"
+endif
+note bottom
+Retención deslizante por registro.
+No se borra todo a una hora fija.
+end note
+@enduml

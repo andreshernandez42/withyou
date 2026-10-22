@@ -1,0 +1,21 @@
+VALIDACIÓN TÉCNICA DEL PAQUETE
+==============================
+Fecha de construcción: 19/10/2026
+
+VALIDADO EN ESTE ENTORNO
+- Python compileall sobre backend/app: OK.
+- Pytest: 2 pruebas aprobadas, 0 fallos.
+- Flujo automatizado cubierto: registro/login, Trusted Circle, aceptación, checkpoint cifrado, acceso no autorizado 403, evento sísmico TEST, correlación geográfica, Safety Check, respuesta SAFE, notificación a contacto, Welfare Check, quórum, caso ciudadano, referencia institucional, Personal Safety Mode y TTL deslizante.
+- SGC ArcGIS normalizer validado con fixture: OK.
+- Documento técnico DOCX renderizado y revisado visualmente: 15 páginas, sin recortes/solapamientos detectados.
+
+NO VALIDADO EN VIVO EN ESTE ENTORNO
+- Conectividad real a SGC ArcGIS y SIRDEC/Socrata, porque la sesión de construcción no tenía navegación web habilitada. Las URLs y adapters están configurados para probarse desde el equipo del proyecto.
+- Compilación Flutter/Android/iOS, porque Flutter SDK no está instalado en este contenedor. Se incluyen scripts bootstrap y código fuente; debe ejecutarse flutter pub get y flutter run en el equipo del proyecto.
+- Docker Compose, porque Docker CLI no está instalado en este contenedor. El compose y Dockerfile usan sintaxis estándar y deben probarse en Docker Desktop.
+
+LÍMITES INTENCIONALES
+- No se automatiza CAPTCHA de SICLICO.
+- No se simula acceso privilegiado a SIRDEC operacional, Fiscalía, Policía o Alerta Rosa.
+- No se incluyen credenciales de terceros inexistentes.
+- Push en background (FCM) se deja para cuando el usuario cree su proyecto Firebase y disponga de credenciales propias; el MVP usa polling en primer plano.

@@ -1,0 +1,4 @@
+digraph G { rankdir=LR; graph [bgcolor="white"]; node [shape=box, style="rounded,filled", fillcolor="#F5F2ED", color="#35526B", fontname="Arial"]; edge [color="#506A7A"];
+U[label="Usuario / contacto"]; M[label="Teléfono Android\nFlutter",fillcolor="#E7F0E8"]; API[label="FastAPI\nAPI REST",fillcolor="#EAF0F6"]; DB[label="PostgreSQL + PostGIS",shape=cylinder,fillcolor="#F6EACD"]; JOB[label="Scheduler TTL\nbackground task"]; SGC[label="SGC ArcGIS",fillcolor="#EDF3F7"]; SIR[label="Datos Abiertos\nSIRDEC / SODA",fillcolor="#EDF3F7"]; SIC[label="SICLICO\nconsulta humana",fillcolor="#EDF3F7"];
+U->M; M->API[label=" HTTPS / LAN"]; API->DB; API->JOB; API->SGC[label=" sync"]; API->SIR[label=" read-only"]; M->SIC[label=" abrir navegador"];
+}

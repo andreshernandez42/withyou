@@ -1,0 +1,12 @@
+@startuml
+left to right direction
+actor "Teléfono A" as A
+cloud "Backend" as B
+actor "Contacto" as C
+A --> B : Internet / Push
+A --> C : SMS mínimo (fallback)
+A --> "Teléfono B" : P2P oportunista
+"Teléfono B" --> B : store-and-forward
+cuando vuelve Internet
+B --> C : notificación autorizada
+@enduml

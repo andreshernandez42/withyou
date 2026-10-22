@@ -1,0 +1,26 @@
+@startuml
+entity Usuario
+entity Dispositivo
+entity Consentimiento
+entity PoliticaEmergencia
+entity ContactoConfianza
+entity Checkpoint
+entity EventoEmergencia
+entity Alerta
+entity CasoVerificacion
+entity WelfareCheck
+entity Verificacion
+entity Auditoria
+entity ReferenciaInstitucional
+Usuario ||--o{ Dispositivo
+Usuario ||--o{ Consentimiento
+Usuario ||--o{ PoliticaEmergencia
+Usuario ||--o{ ContactoConfianza
+Usuario ||--o{ Checkpoint
+Usuario ||--o{ CasoVerificacion
+EventoEmergencia ||--o{ Alerta
+CasoVerificacion ||--o{ WelfareCheck
+WelfareCheck ||--o{ Verificacion
+CasoVerificacion ||--o{ ReferenciaInstitucional
+Usuario ||--o{ Auditoria
+@enduml

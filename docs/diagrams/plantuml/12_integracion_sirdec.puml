@@ -1,0 +1,19 @@
+@startuml
+rectangle Plataforma as P
+cloud "SIRDEC / Datos Abiertos
+SODA · histórico · fecha de corte" as O
+rectangle "Consulta pública SICLICO
+interacción humana / CAPTCHA" as C
+component "InstitutionalAdapter
+Mock / contrato" as M
+component "API oficial autorizada
+(futuro)" as A
+P --> O : estadística / contexto
+P --> C : redirigir consulta nominal
+P --> M : demostrar interoperabilidad
+M ..> A : sustituir con convenio/API
+note right of P
+No crea denuncia oficial.
+No automatiza CAPTCHA ni scraping.
+end note
+@enduml

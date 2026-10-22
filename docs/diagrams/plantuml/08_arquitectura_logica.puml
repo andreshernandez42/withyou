@@ -1,0 +1,31 @@
+@startuml
+package "Fuentes / entradas" {
+  [SGC]
+  [IDEAM / FEWS]
+  [SIRDEC Open Data]
+  [Simulador TEST]
+}
+[Event & Data Normalizer
+CAP-like] as N
+[Emergency Context Engine] as E
+package "Monolito modular" {
+  [Identity & Device]
+  [Trusted Circle]
+  [Consent / Policy]
+  [Emergency Location Vault]
+  [Alert Orchestrator]
+  [Welfare Check]
+  [Case / State Engine]
+  [Audit & Abuse Detection]
+  [Institutional Adapters]
+}
+[SGC] --> N
+[IDEAM / FEWS] --> N
+[SIRDEC Open Data] --> N
+[Simulador TEST] --> N
+N --> E
+E --> [Consent / Policy]
+E --> [Emergency Location Vault]
+E --> [Alert Orchestrator]
+E --> [Welfare Check]
+@enduml

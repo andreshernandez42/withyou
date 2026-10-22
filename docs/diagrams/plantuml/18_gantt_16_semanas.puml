@@ -1,0 +1,11 @@
+@startgantt
+Project starts 2026-09-07
+[Revisión y requisitos] lasts 2 weeks
+[Arquitectura y datos] starts at [Revisión y requisitos]'s end and lasts 2 weeks
+[Backend / Trusted Circle / Consent] starts at [Arquitectura y datos]'s end and lasts 2 weeks
+[Vault + geolocalización] starts at [Backend / Trusted Circle / Consent]'s end and lasts 2 weeks
+[Eventos + check-in + alertas] starts at [Vault + geolocalización]'s end and lasts 2 weeks
+[Welfare Check + desapariciones + SIRDEC] starts at [Eventos + check-in + alertas]'s end and lasts 2 weeks
+[P2P / seguridad / continuidad] starts at [Welfare Check + desapariciones + SIRDEC]'s end and lasts 2 weeks
+[Experimentos + documento final] starts at [P2P / seguridad / continuidad]'s end and lasts 2 weeks
+@endgantt

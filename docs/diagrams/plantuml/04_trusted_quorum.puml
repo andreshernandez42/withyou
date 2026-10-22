@@ -1,0 +1,21 @@
+@startuml
+start
+:Contacto 1 solicita verificación;
+:Enviar check-in al usuario;
+if (¿Usuario responde?) then (sí)
+  :Registrar respuesta;
+else (no)
+  if (¿Política exige 2 de 3?) then (sí)
+    :Consultar siguiente contacto autorizado;
+    if (¿Quórum alcanzado?) then (sí)
+      :Liberar información mínima preautorizada;
+      :Auditar acceso;
+    else (no)
+      :Mantener estado no confirmado;
+    endif
+  else (no)
+    :Aplicar política configurada;
+  endif
+endif
+stop
+@enduml

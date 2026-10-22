@@ -1,0 +1,4 @@
+@startuml
+note "Gráfica de datos: 423 (16 ago), 348 (17 ago), 152 (26 ago).
+La reducción no equivale automáticamente a personas localizadas." as N
+@enduml

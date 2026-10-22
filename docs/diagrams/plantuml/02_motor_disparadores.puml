@@ -1,0 +1,19 @@
+@startuml
+start
+:Recibir disparador;
+if (¿Evento oficial?) then (sí)
+  :Validar fuente, vigencia, severidad y área;
+elseif (¿Solicitud familiar?) then (sí)
+  :Validar Trusted Circle y política;
+else
+  :SOS / Personal Safety Mode;
+endif
+:Consent & Policy Engine;
+:Enviar check-in;
+if (¿Responde?) then (sí)
+  :Registrar estado y notificar autorizados;
+else (no)
+  :Estado = NO CONFIRMADO;
+endif
+stop
+@enduml

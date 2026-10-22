@@ -1,0 +1,9 @@
+import 'package:flutter/material.dart';
+import '../services/api_service.dart';
+
+class SafetyModeScreen extends StatefulWidget{final ApiService api;const SafetyModeScreen({super.key,required this.api});@override State<SafetyModeScreen> createState()=>_SafetyModeScreenState();}
+class _SafetyModeScreenState extends State<SafetyModeScreen>{List<dynamic> contacts=[];Set<String> selected={};String? msg;bool busy=false;@override void initState(){super.initState();load();}
+ Future<void> load()async{final c=await widget.api.contacts();if(mounted)setState(()=>contacts=c.where((x)=>x['status']=='ACCEPTED').toList());}
+ Future<void> start()async{setState(()=>busy=true);try{final r=await widget.api.startSafetyMode(selected.toList());setState(()=>msg='Modo seguridad activo hasta ${r['sampling_boost_until']}.');}catch(e){setState(()=>msg=e.toString());}finally{setState(()=>busy=false);}}
+ @override Widget build(BuildContext context)=>Scaffold(appBar:AppBar(title:const Text('Modo de seguridad personal')),body:ListView(padding:const EdgeInsets.all(20),children:[const Text('Úsalo ante una situación de vulnerabilidad inmediata, por ejemplo si percibes que alguien te sigue. No clasifica automáticamente lo ocurrido como acoso, agresión o secuestro.',style:TextStyle(fontSize:16)),const SizedBox(height:18),const Text('Contactos a notificar',style:TextStyle(fontWeight:FontWeight.w800)),...contacts.map((c)=>CheckboxListTile(value:selected.contains(c['id']),title:Text(c['contact_name']),onChanged:(v)=>setState(()=>v==true?selected.add(c['id']):selected.remove(c['id'])))),const SizedBox(height:12),FilledButton.icon(onPressed:busy?null:start,icon:const Icon(Icons.shield),label:const Text('Activar modo seguridad'),style:FilledButton.styleFrom(backgroundColor:const Color(0xffb93438),padding:const EdgeInsets.all(16))),if(msg!=null)Padding(padding:const EdgeInsets.only(top:14),child:Text(msg!))]));}
+}

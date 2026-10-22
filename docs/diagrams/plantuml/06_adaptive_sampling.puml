@@ -1,0 +1,18 @@
+@startuml
+start
+:Modo normal;
+if (¿Movimiento relevante?) then (no)
+  :Frecuencia muy baja;
+else (sí)
+  :Checkpoints moderados;
+  if (¿Trayecto seguro activo?) then (sí)
+    :Aumentar frecuencia temporalmente;
+  endif
+endif
+if (¿Evento oficial / SOS / Safety Mode?) then (sí)
+  :Modo emergencia;
+  :Frecuencia máxima permitida y proporcional;
+endif
+:Generar checkpoint cifrado;
+stop
+@enduml

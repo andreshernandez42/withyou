@@ -1,0 +1,27 @@
+@startuml
+left to right direction
+actor "Usuario titular" as U
+actor "Contacto de confianza" as C
+actor "Verificador comunitario" as V
+actor "Fuente oficial" as F
+actor "Autoridad / sistema institucional
+(futuro)" as A
+rectangle Plataforma {
+  usecase "Configurar política y círculo" as UC1
+  usecase "Generar checkpoints" as UC2
+  usecase "Activar SOS / responder check-in" as UC3
+  usecase "Solicitar verificación" as UC4
+  usecase "Consultar información autorizada" as UC5
+  usecase "Aportar Welfare Check" as UC6
+  usecase "Ingerir evento oficial" as UC7
+  usecase "Escalar / interoperar" as UC8
+}
+U --> UC1
+U --> UC2
+U --> UC3
+C --> UC4
+C --> UC5
+V --> UC6
+F --> UC7
+A --> UC8
+@enduml

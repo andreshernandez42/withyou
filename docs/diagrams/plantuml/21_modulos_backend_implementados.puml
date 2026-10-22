@@ -1,0 +1,29 @@
+@startuml
+skinparam componentStyle rectangle
+package "FastAPI Backend" {
+  [Auth]
+  [Trusted Circle]
+  [Consent Policy]
+  [Location Vault]
+  [Emergency Engine]
+  [Welfare / Quorum]
+  [Cases / Institutional Ref]
+  [Personal Safety]
+  [Notifications]
+  [Audit]
+  [Official Adapters]
+}
+database PostgreSQL
+[Auth] --> PostgreSQL
+[Trusted Circle] --> PostgreSQL
+[Consent Policy] --> PostgreSQL
+[Location Vault] --> PostgreSQL
+[Emergency Engine] --> [Location Vault]
+[Emergency Engine] --> [Notifications]
+[Welfare / Quorum] --> [Consent Policy]
+[Welfare / Quorum] --> [Notifications]
+[Cases / Institutional Ref] --> PostgreSQL
+[Personal Safety] --> [Notifications]
+[Audit] --> PostgreSQL
+[Official Adapters] --> [Emergency Engine]
+@enduml
