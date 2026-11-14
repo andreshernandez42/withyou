@@ -8,9 +8,3 @@ __pycache__/
 build/
 android/.gradle/
 ios/Pods/
-
-.env.demo
-LOCAL_DEMO_CREDENTIALS.txt
-
-.env.demo
-LOCAL_DEMO_CREDENTIALS.txt

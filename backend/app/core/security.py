@@ -1,18 +1,17 @@
 from __future__ import annotations
 import base64
 import hashlib
-import hmac
 import json
-import os
-import time
+import secrets
+from datetime import timedelta
 from typing import Any
+import jwt
 from argon2 import PasswordHasher
 from cryptography.fernet import Fernet, InvalidToken
-from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
-from .config import settings
+from app.core.config import settings
+from app.services.timeutils import utcnow
 
 _password_hasher = PasswordHasher()
-_serializer = URLSafeTimedSerializer(settings.token_secret, salt="withyou-auth-v1")
 
 
 def hash_password(password: str) -> str:
@@ -26,21 +25,40 @@ def verify_password(password: str, password_hash: str) -> bool:
         return False
 
 
-def create_access_token(user_id: str, email: str) -> str:
-    return _serializer.dumps({"sub": user_id, "email": email, "iat": int(time.time())})
+def create_access_token(user_id: str, email: str, role: str) -> str:
+    now = utcnow()
+    payload = {
+        "sub": user_id,
+        "email": email,
+        "role": role,
+        "iat": int(now.timestamp()),
+        "exp": int((now + timedelta(minutes=settings.access_token_minutes)).timestamp()),
+        "typ": "access",
+    }
+    return jwt.encode(payload, settings.token_secret, algorithm="HS256")
 
 
 def decode_access_token(token: str) -> dict[str, Any] | None:
     try:
-        return _serializer.loads(token, max_age=settings.token_max_age_seconds)
-    except (BadSignature, SignatureExpired):
+        payload = jwt.decode(token, settings.token_secret, algorithms=["HS256"])
+        return payload if payload.get("typ") == "access" else None
+    except jwt.PyJWTError:
         return None
+
+
+def new_refresh_token() -> tuple[str, str]:
+    raw = secrets.token_urlsafe(48)
+    return raw, hash_token(raw)
+
+
+def hash_token(raw: str) -> str:
+    return hashlib.sha256(raw.encode("utf-8")).hexdigest()
 
 
 def _fernet() -> Fernet:
     key = settings.field_encryption_key.strip()
     if not key:
-        # Deterministic fallback for local development only. Production must set FIELD_ENCRYPTION_KEY.
+        # Solo para DEV/TEST. En producción validate_runtime_settings obliga a configurarla.
         digest = hashlib.sha256(settings.token_secret.encode("utf-8")).digest()
         key = base64.urlsafe_b64encode(digest).decode("ascii")
     return Fernet(key.encode("ascii"))

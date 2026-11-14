@@ -1,0 +1,52 @@
+.................                                                        [100%]
+================================ tests coverage ================================
+_______________ coverage: platform linux, python 3.13.5-final-0 ________________
+
+Name                                Stmts   Miss  Cover
+-------------------------------------------------------
+app/__init__.py                         0      0   100%
+app/adapters/ideam.py                  11      6    45%
+app/adapters/sgc.py                    44     18    59%
+app/adapters/sirdec.py                 15      9    40%
+app/api/router.py                       5      0   100%
+app/api/routes/__init__.py              0      0   100%
+app/api/routes/admin.py                29      8    72%
+app/api/routes/auth.py                 62     10    84%
+app/api/routes/cases.py                53     16    70%
+app/api/routes/checkpoints.py          41      8    80%
+app/api/routes/contacts.py             57     14    75%
+app/api/routes/events.py               60     23    62%
+app/api/routes/notifications.py        20      3    85%
+app/api/routes/official.py             21      6    71%
+app/api/routes/personal_safety.py      36      6    83%
+app/api/routes/policies.py             29     11    62%
+app/api/routes/privacy.py              36      3    92%
+app/api/routes/safety.py               58     13    78%
+app/api/routes/users.py                59     15    75%
+app/api/routes/welfare.py              85     13    85%
+app/core/config.py                     68     12    82%
+app/core/database.py                   14      0   100%
+app/core/dependencies.py               24      3    88%
+app/core/security.py                   50      6    88%
+app/main.py                            56     16    71%
+app/middleware/security.py             15      0   100%
+app/models/__init__.py                  1      0   100%
+app/models/entities.py                256      0   100%
+app/schemas/api.py                    118      0   100%
+app/seed.py                            29     29     0%
+app/services/common.py                 21      0   100%
+app/services/events.py                 78     11    86%
+app/services/maintenance.py            12      6    50%
+app/services/notifications.py          47     37    21%
+app/services/policy.py                 65     14    78%
+app/services/state_machine.py           3      1    67%
+app/services/timeutils.py              11      3    73%
+app/services/vault.py                  51     10    80%
+app/services/welfare.py                90     20    78%
+app/workers/__init__.py                 0      0   100%
+app/workers/celery_app.py               4      4     0%
+app/workers/tasks.py                    9      9     0%
+-------------------------------------------------------
+TOTAL                                1743    363    79%
+Coverage XML written to file /mnt/data/withyou_backend_v2/docs/coverage.xml
+17 passed in 10.96s

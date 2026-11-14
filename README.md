@@ -1,50 +1,76 @@
-# With You - Plataforma Resiliente (MVP académico)
+# With You — MVP académico
 
-Paquete integral del Trabajo de Grado: anteproyecto, backend, esquema de base de datos, aplicación móvil Flutter, mockups, diagramas, colección Postman, OpenAPI, documentación técnica y scripts de arranque.
+Plataforma móvil resiliente para verificación de bienestar, localización mínima y coordinación controlada de ayuda.
 
-## Qué funciona en el MVP
+## Estado del paquete
 
-- Registro/login con token firmado y contraseñas Argon2.
-- Trusted Circle con invitación/aceptación y permisos.
-- Consent Policy con quórum N-de-M.
-- Emergency Location Vault con coordenadas exactas cifradas, TTL individual de 24 h y `incident_hold` temporal.
-- Checkpoints desde móvil.
-- Motor multiamenaza con eventos `TEST` (sismo, deslizamiento, inundación, incendio).
-- Filtro sísmico configurable por magnitud y distancia.
-- Safety Check automático para usuarios dentro del área relevante.
-- Estados `SAFE`, `HELP_REQUIRED`, `UNABLE_TO_EXIT`, `CHECK_REQUESTED`, `NO_RESPONSE`/quórum, sin inferir secuestro o desaparición por silencio.
-- Solicitud familiar de Welfare Check y quórum del círculo de confianza.
-- Caso de verificación de paradero separado de una denuncia oficial.
-- Referencia institucional asociable a un caso.
-- Personal Safety Mode para vulnerabilidad inmediata.
-- Auditoría de accesos y eventos sensibles.
-- Integración read-only con SIRDEC/Datos Abiertos mediante SODA.
-- Link seguro a consulta pública SICLICO (no automatiza CAPTCHA).
-- Adapter SGC ArcGIS configurable y sincronización de sismos.
-- Adapter IDEAM configurable; si no hay endpoint oficial estable configurado se usa el simulador multiamenaza.
-- App Flutter con login, pantalla principal, alerta tipo mockup, círculo de confianza, solicitudes, fuentes y modo de seguridad.
-- OpenAPI y colección Postman.
+Este paquete contiene el **backend MVP v1.0**, el mini frontend Flutter existente, PostgreSQL/PostGIS, Redis/Celery, Nginx para balanceo local, simulador multiamenaza, adaptadores SGC/SIRDEC/IDEAM, colección Postman y pruebas automatizadas.
 
-## Qué NO se afirma como implementado en producción
+La separación conceptual se mantiene:
 
-- Acceso operacional privilegiado a SIRDEC, Fiscalía, Policía o Alerta Rosa.
-- Activación automática de MBU o denuncia oficial.
-- Integración con operadores, Cell Broadcast o satélite.
-- FCM/SMS productivo sin credenciales propias del usuario.
-- Mesh universal Android+iOS.
-- Despliegue multi-región real. La arquitectura y pruebas se documentan; el MVP corre localmente.
+- un caso creado en la app **no es** una denuncia, MBU, Alerta Rosa ni registro SIRDEC;
+- `NO_RESPONSE` significa únicamente **estado no confirmado**;
+- los eventos TEST siempre se marcan como simulación;
+- la ubicación exacta no se libera por pertenecer al Trusted Circle: requiere un **grant contextual temporal** derivado de SOS, respuesta de ayuda, evento preautorizado o quórum;
+- cada checkpoint tiene TTL individual de 24 h; no existe borrado masivo diario;
+- NNA se maneja solo como perfil sintético/restringido en el MVP.
 
-## Arranque rápido con Docker
+## Inicio rápido con Docker
 
-1. Instala Docker Desktop.
-2. Copia `.env.demo` a `.env`.
-3. Ejecuta `scripts/start_demo.ps1` (Windows) o `scripts/start_demo.sh` (Linux/macOS).
-4. Abre Swagger: `http://localhost:8000/docs`.
-5. Importa `postman/WithYou_MVP.postman_collection.json` si deseas probar API.
-6. Para el móvil, revisa `mobile/README.md`.
+1. Instalar Docker Desktop.
+2. Copiar `.env.demo` a `.env` si desea modificar parámetros del laboratorio.
+3. Ejecutar:
 
-## Validación incluida
+```bash
+docker compose --env-file .env.demo up -d --build
+```
 
-El backend incluye pruebas automatizadas del flujo central y adaptador SGC. Se validaron localmente sin acceso web externo: autenticación, Trusted Circle, checkpoint, bloqueo de acceso no autorizado, evento sísmico de prueba, check-in, notificaciones, quórum 2-de-3, caso de verificación, referencia institucional, Personal Safety Mode y TTL deslizante.
+4. Crear datos demo:
 
-Las llamadas en vivo a SGC/SIRDEC están configuradas pero deben validarse desde un entorno con Internet, ya que el entorno de construcción de este paquete no tenía búsqueda web habilitada.
+```bash
+docker compose --env-file .env.demo exec api1 python -m app.seed
+```
+
+5. Abrir `http://localhost:8000/docs`.
+
+Credenciales demo: ver `LOCAL_DEMO_CREDENTIALS.txt`.
+
+## Pruebas sin Docker
+
+Desde `backend/`:
+
+```bash
+pytest -q
+```
+
+La batería incluida cubre autenticación, roles TEST, quórum, grants de ubicación, filtros de magnitud, Safety Check, TTL deslizante, SOS, Personal Safety, casos ciudadanos, verificación comunitaria y NNA sintético.
+
+## Frontend
+
+El mini frontend Flutter se conserva en `mobile/`. La URL por defecto es:
+
+- emulador Android: `http://10.0.2.2:8000/api/v1`
+- dispositivo físico: `http://<IP-LAN-PC>:8000/api/v1`
+
+No se debe exponer el entorno demo directamente a Internet.
+
+## Dependencias externas
+
+El backend queda cerrado a nivel de lógica de MVP. Estas capacidades dependen de servicios/credenciales externas reales:
+
+- Firebase Cloud Messaging: código soportado, requiere proyecto/credenciales.
+- SGC ArcGIS: adapter configurable; validar endpoint/capa en el entorno de ejecución.
+- IDEAM/FEWS: adapter configurable; no se inventa un endpoint estable.
+- SIRDEC operacional/Fiscalía/Policía/Alerta Rosa: no hay integración privilegiada; se usa Open Data/portal oficial y contratos simulados.
+- P2P/DTN: pertenece principalmente al cliente móvil y sigue experimental.
+
+## Cierre y evidencia del backend
+
+- Contrato API: `docs/backend/API_CONTRACT.md`
+- Integración Flutter: `docs/backend/FRONTEND_INTEGRATION.md`
+- Estado de cierre: `docs/backend/BACKEND_STATUS.md`
+- Informe de validación: `docs/backend/VALIDATION_REPORT.md`
+- Migraciones: `docs/backend/MIGRATIONS.md`
+- OpenAPI: `docs/openapi.json`
+- Postman: `postman/WithYou_Backend_MVP_v1.postman_collection.json`
+- Cobertura: `docs/coverage_summary.txt` y `docs/coverage.xml`

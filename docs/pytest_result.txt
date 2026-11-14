@@ -1,2 +1,20 @@
-..                                                                       [100%]
-2 passed in 1.23s
+Validación backend WithYou
+Fecha de corte: 2026-10-30
+
+Resultado funcional:
+17 passed in 8.95s
+
+Cobertura (segunda ejecución con pytest-cov):
+TOTAL 1736 statements, 370 missed, 79% coverage
+17 passed in 10.96s
+
+Comandos:
+PYTHONPATH=. python -m compileall -q app alembic
+PYTHONPATH=. pytest -q
+PYTHONPATH=. pytest --cov=app --cov-report=term-missing --cov-report=xml:../docs/coverage.xml -q
+
+Validaciones adicionales:
+- OpenAPI: 60 paths / 70 operaciones HTTP.
+- Postman: 70 requests; 0 operaciones faltantes frente a OpenAPI.
+- Docker Compose: YAML válido, 7 servicios declarados.
+- Alembic baseline: upgrade OK sobre SQLite temporal, 21 tablas incluyendo alembic_version.
