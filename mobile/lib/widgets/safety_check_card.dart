@@ -8,7 +8,7 @@ class SafetyCheckCard extends StatelessWidget {
   @override Widget build(BuildContext context){
     return Container(
       margin:const EdgeInsets.all(18),padding:const EdgeInsets.all(20),
-      decoration:BoxDecoration(color:Colors.white,borderRadius:BorderRadius.circular(28),boxShadow:[BoxShadow(color:Colors.black.withValues(alpha: .08),blurRadius:30,offset:const Offset(0,12))]),
+      decoration:BoxDecoration(color:Colors.white,borderRadius:BorderRadius.circular(28),boxShadow:[BoxShadow(color:Colors.black.withOpacity(.08),blurRadius:30,offset:const Offset(0,12))]),
       child:Column(mainAxisSize:MainAxisSize.min,crossAxisAlignment:CrossAxisAlignment.stretch,children:[
         Row(children:[const Icon(Icons.monitor_heart_outlined,color:Color(0xffc3542b)),const SizedBox(width:8),Text(title,style:const TextStyle(fontWeight:FontWeight.w700,color:Color(0xffa74928)))]),
         const SizedBox(height:18),Text(subtitle,style:const TextStyle(fontSize:26,fontWeight:FontWeight.w800)),
