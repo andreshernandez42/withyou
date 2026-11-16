@@ -66,7 +66,7 @@ services:
 
   beat:
     build: ./backend
-    command: ["celery", "-A", "app.workers.celery_app.celery_app", "beat", "--loglevel=INFO"]
+    command: ["celery", "-A", "app.workers.celery_app.celery_app", "beat", "--loglevel=INFO", "--schedule=/tmp/celerybeat-schedule"]
     env_file: .env.demo
     environment:
       DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-withyou}:${POSTGRES_PASSWORD:-withyou_demo_2026}@db:5432/${POSTGRES_DB:-withyou}

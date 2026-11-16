@@ -62,7 +62,9 @@ def upsert_device(payload: DeviceIn, user: User = Depends(current_user), db: Ses
         row=Device(user_id=user.id,device_uid=payload.device_uid,platform=payload.platform,device_name=payload.device_name,push_token=payload.push_token)
         db.add(row); db.flush()
     else:
-        row.platform=payload.platform; row.device_name=payload.device_name; row.push_token=payload.push_token; row.active=True; row.last_seen_at=utcnow()
+        row.platform=payload.platform; row.device_name=payload.device_name
+        if payload.push_token is not None: row.push_token=payload.push_token
+        row.active=True; row.last_seen_at=utcnow()
     audit(db,user.id,"DEVICE_UPSERT","device",row.id,metadata={"platform":row.platform}); db.commit()
     return {"id":row.id,"device_uid":row.device_uid,"platform":row.platform,"device_name":row.device_name,"active":row.active}
 

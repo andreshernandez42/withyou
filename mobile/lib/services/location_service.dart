@@ -6,15 +6,25 @@ class LocationService {
   LocationService(this.api);
 
   Future<bool> ensurePermission() async {
-    if(!await Geolocator.isLocationServiceEnabled()) return false;
-    var p=await Geolocator.checkPermission();
-    if(p==LocationPermission.denied) p=await Geolocator.requestPermission();
-    return p==LocationPermission.whileInUse || p==LocationPermission.always;
+    if (!await Geolocator.isLocationServiceEnabled()) {
+      throw StateError('Activa el GPS o los servicios de ubicación del dispositivo.');
+    }
+    var permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+    }
+    if (permission == LocationPermission.deniedForever) {
+      throw StateError('La ubicación está bloqueada. Habilítala en Ajustes > Aplicaciones > WithYou > Permisos.');
+    }
+    return permission == LocationPermission.whileInUse || permission == LocationPermission.always;
   }
 
-  Future<Map<String,dynamic>?> captureAndUpload() async {
-    if(!await ensurePermission()) return null;
-    final pos=await Geolocator.getCurrentPosition(desiredAccuracy:LocationAccuracy.high);
-    return api.postCheckpoint(pos.latitude,pos.longitude,accuracy:pos.accuracy,network:'mobile',movement:'UNKNOWN');
+  Future<Map<String, dynamic>?> captureAndUpload() async {
+    if (!await ensurePermission()) return null;
+    final position = await Geolocator.getCurrentPosition(
+      desiredAccuracy: LocationAccuracy.high,
+    ).timeout(const Duration(seconds: 30));
+    return api.postCheckpoint(position.latitude, position.longitude,
+      accuracy: position.accuracy, network: 'mobile', movement: 'UNKNOWN');
   }
 }

@@ -8,3 +8,10 @@ __pycache__/
 build/
 android/.gradle/
 ios/Pods/
+
+# Test and local build artifacts
+backend/tests/*.db
+backend/.coverage
+backend/coverage.xml
+**/.pytest_cache/
+**/__pycache__/

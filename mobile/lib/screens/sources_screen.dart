@@ -1,11 +1,79 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../services/api_service.dart';
 
-class SourcesScreen extends StatefulWidget{final ApiService api;const SourcesScreen({super.key,required this.api});@override State<SourcesScreen> createState()=>_SourcesScreenState();}
-class _SourcesScreenState extends State<SourcesScreen>{String text='';bool busy=false;
- Future<void> sgc()async{setState(()=>busy=true);try{final r=await widget.api.syncSgc();setState(()=>text='SGC: ${r['fetched']} consultados, ${r['created']} incorporados.');}catch(e){setState(()=>text=e.toString());}finally{setState(()=>busy=false);}}
- Future<void> sirdec()async{setState(()=>busy=true);try{final r=await widget.api.sirdecPreview(limit:5);setState(()=>text='SIRDEC/Datos Abiertos: ${r['records'].length} registros de muestra. Corte: ${r['cutoff']}.');}catch(e){setState(()=>text=e.toString());}finally{setState(()=>busy=false);}}
- Future<void> portal()async{try{final r=await widget.api.sirdecPortal();final uri=Uri.parse(r['url']);await launchUrl(uri,mode:LaunchMode.externalApplication);}catch(e){setState(()=>text=e.toString());}}
- @override Widget build(BuildContext context)=>ListView(padding:const EdgeInsets.fromLTRB(18,18,18,110),children:[const Text('Fuentes oficiales',style:TextStyle(fontSize:24,fontWeight:FontWeight.w800)),const SizedBox(height:8),const Text('La app distingue fuentes públicas, consulta humana y adapters institucionales futuros.',style:TextStyle(color:Colors.black54)),const SizedBox(height:18),Card(child:ListTile(leading:const Icon(Icons.public),title:const Text('Servicio Geológico Colombiano'),subtitle:const Text('Sincronización de eventos sísmicos desde servicio ArcGIS oficial configurado.'),trailing:TextButton(onPressed:busy?null:sgc,child:const Text('Sincronizar')))),Card(child:ListTile(leading:const Icon(Icons.analytics_outlined),title:const Text('SIRDEC / Datos Abiertos'),subtitle:const Text('Consulta histórica derivada de SIRDEC con fecha de corte; no representa estado operativo actual.'),trailing:TextButton(onPressed:busy?null:sirdec,child:const Text('Probar')))),Card(child:ListTile(leading:const Icon(Icons.open_in_new),title:const Text('Consulta pública Medicina Legal'),subtitle:const Text('Abre SICLICO en navegador. No automatiza ni elude CAPTCHA.'),trailing:TextButton(onPressed:portal,child:const Text('Abrir')))),if(text.isNotEmpty)Container(margin:const EdgeInsets.only(top:14),padding:const EdgeInsets.all(14),decoration:BoxDecoration(color:const Color(0xffedf3f7),borderRadius:BorderRadius.circular(14)),child:Text(text))]);}
+class SourcesScreen extends StatefulWidget {
+  final ApiService api;
+  const SourcesScreen({super.key, required this.api});
+  @override State<SourcesScreen> createState() => _SourcesScreenState();
+}
 
+class _SourcesScreenState extends State<SourcesScreen> {
+  Map<String, dynamic>? state;
+  bool admin = false, busy = false;
+  String? message;
+
+  @override void initState() { super.initState(); load(); }
+
+  Future<void> load() async {
+    try {
+      final me = await widget.api.me();
+      final status = await widget.api.sgcStatus();
+      if (mounted) setState(() {
+        admin = me['role'] == 'ADMIN' || me['role'] == 'TESTER';
+        state = status;
+      });
+    } catch (_) {
+      if (mounted) setState(() => message = 'No se pudo consultar el estado de la fuente oficial.');
+    }
+  }
+
+  Future<void> sync() async {
+    setState(() => busy = true);
+    try {
+      final result = await widget.api.syncSgc();
+      if (mounted) setState(() => message =
+        'Consulta completada: ${result['fetched']} eventos examinados, ${result['created']} nuevos.');
+      await load();
+    } catch (_) {
+      if (mounted) setState(() => message = 'La fuente oficial no respondió correctamente. Intenta nuevamente.');
+    } finally { if (mounted) setState(() => busy = false); }
+  }
+
+  @override Widget build(BuildContext context) => RefreshIndicator(
+    onRefresh: load,
+    child: ListView(padding: const EdgeInsets.fromLTRB(20, 24, 20, 100), children: [
+      const Text('Información sísmica', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 24)),
+      const SizedBox(height: 8),
+      const Text('Eventos reportados por el Servicio Geológico Colombiano. Las publicaciones pueden tener demora; WithYou no predice terremotos.',
+        style: TextStyle(color: Colors.black54)),
+      const SizedBox(height: 18),
+      Card(child: Padding(padding: const EdgeInsets.all(18), child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start, children: [
+          const Row(children: [Icon(Icons.public, color: Color(0xffb44b28)),
+            SizedBox(width: 10), Expanded(child: Text('Servicio Geológico Colombiano',
+              style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700)))]),
+          const SizedBox(height: 12),
+          Text(state?['last_sync_at'] == null
+            ? 'Aún no hay una consulta automática confirmada.'
+            : 'Última consulta: ${state!['last_sync_at']} (UTC)'),
+          const SizedBox(height: 6),
+          Text(state?['recent_feed_verified'] == true
+            ? 'Se ha recibido al menos un evento reciente.'
+            : 'La fuente de eventos recientes todavía no está verificada.',
+            style: const TextStyle(color: Colors.black54)),
+          if (admin) ...[
+            const SizedBox(height: 12),
+            OutlinedButton.icon(onPressed: busy ? null : sync,
+              icon: const Icon(Icons.sync), label: const Text('Comprobar fuente')),
+          ],
+        ]))),
+      if (message != null) Padding(padding: const EdgeInsets.only(top: 12),
+        child: Card(color: const Color(0xffedf3f7), child: Padding(
+          padding: const EdgeInsets.all(14), child: Text(message!)))),
+      const SizedBox(height: 18),
+      const Text('Ante un sismo', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+      const SizedBox(height: 6),
+      const Text('Prioriza tu seguridad física y sigue las indicaciones de las autoridades. WithYou ayuda a confirmar tu bienestar con tus contactos; no sustituye los sistemas oficiales de emergencia.'),
+    ]),
+  );
+}

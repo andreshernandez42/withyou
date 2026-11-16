@@ -3,8 +3,8 @@ import '../services/api_service.dart';
 
 class LoginScreen extends StatefulWidget{ final ApiService api; final VoidCallback onLogged; const LoginScreen({super.key,required this.api,required this.onLogged}); @override State<LoginScreen> createState()=>_LoginScreenState(); }
 class _LoginScreenState extends State<LoginScreen>{
-  final email=TextEditingController(text:'andres@example.com');
-  final pass=TextEditingController(text:'DemoAndres2026!');
+  final email=TextEditingController();
+  final pass=TextEditingController();
   bool busy=false; String? error;
   Future<void> go() async { setState(()=>busy=true); try{ await widget.api.login(email.text.trim(),pass.text); widget.onLogged(); }catch(e){setState(()=>error=e.toString());}finally{if(mounted)setState(()=>busy=false);} }
   @override Widget build(BuildContext context)=>Scaffold(backgroundColor:const Color(0xfff4efe8),body:SafeArea(child:Center(child:SingleChildScrollView(padding:const EdgeInsets.all(28),child:ConstrainedBox(constraints:const BoxConstraints(maxWidth:420),child:Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
@@ -13,6 +13,6 @@ class _LoginScreenState extends State<LoginScreen>{
     TextField(controller:pass,obscureText:true,decoration:const InputDecoration(labelText:'Contraseña',filled:true,fillColor:Colors.white,border:OutlineInputBorder())),const SizedBox(height:16),
     if(error!=null) Text(error!,style:const TextStyle(color:Colors.red)),
     FilledButton(onPressed:busy?null:go,style:FilledButton.styleFrom(backgroundColor:const Color(0xffb6532e),padding:const EdgeInsets.all(16)),child:Text(busy?'Ingresando...':'Ingresar')),
-    const SizedBox(height:14),const Text('Credenciales demo incluidas en LOCAL_DEMO_CREDENTIALS.txt. Cambiarlas antes de exponer el sistema.',textAlign:TextAlign.center,style:TextStyle(fontSize:12,color:Colors.black45)),
+    
   ]))))));
 }

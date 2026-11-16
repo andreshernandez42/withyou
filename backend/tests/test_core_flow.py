@@ -67,14 +67,14 @@ def test_magnitude_filter_and_relevant_event(client,db):
     assert len(pending)>=1
 
 
-def test_safe_response_notifies_contacts(client,db):
+def test_simulated_safe_response_does_not_notify_regular_contacts(client,db):
     s=setup_circle(client,db)
     client.post('/api/v1/checkpoints',headers=auth(s['ta']),json={'latitude':4.711,'longitude':-74.072})
     e=client.post('/api/v1/test/emergency-events',headers=auth(s['ta']),json={'type':'FLOOD','source':'TEST-FLOOD','latitude':4.71,'longitude':-74.07,'radius_km':20}).json()['event']['id']
     r=client.post('/api/v1/safety/respond',headers=auth(s['ta']),json={'status':'SAFE','event_id':e})
     assert r.status_code==200 and r.json()['status']=='SAFE'
     notes=client.get('/api/v1/notifications?pending_only=true',headers=auth(s['tm'])).json()
-    assert any(n['type']=='STATUS_UPDATE' for n in notes)
+    assert not any(n['type']=='STATUS_UPDATE' for n in notes)
 
 
 def test_no_response_is_not_missing_and_can_grant_by_policy(client,db):

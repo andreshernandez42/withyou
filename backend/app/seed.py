@@ -22,7 +22,7 @@ def run():
                 db.add(u);db.flush()
                 db.add(ConsentPolicy(user_id=u.id,quorum_required=2,allow_exact_location=True,allow_coarse_location=True,
                                      allow_community_check=(email=='andres@example.com'),release_after_quorum=True,
-                                     release_on_official_event_no_response=True,access_ttl_minutes=60))
+                                     release_on_official_event_no_response=False,access_ttl_minutes=60))
             else:
                 u.role=role;u.community_opt_in=community
             users[email]=u

@@ -40,7 +40,7 @@ def register(payload: RegisterIn, db: Session = Depends(get_db)):
     db.add(user); db.flush()
     db.add(ConsentPolicy(user_id=user.id, quorum_required=2, allow_exact_location=True,
                          allow_coarse_location=True, release_after_quorum=True,
-                         release_on_official_event_no_response=True))
+                         release_on_official_event_no_response=False))
     audit(db, user.id, "USER_REGISTER", "user", user.id)
     db.commit(); db.refresh(user)
     return _user_out(user)

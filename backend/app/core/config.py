@@ -56,10 +56,17 @@ class Settings:
     earthquake_max_distance_km: float = _float("EARTHQUAKE_MAX_DISTANCE_KM", 150.0)
     earthquake_max_age_minutes: int = _int("EARTHQUAKE_MAX_AGE_MINUTES", 30)
 
+    earthquake_checkpoint_max_age_minutes: int = _int("EARTHQUAKE_CHECKPOINT_MAX_AGE_MINUTES", 60)
+
     sgc_query_url: str = os.getenv(
         "SGC_QUERY_URL",
         "https://srvags.sgc.gov.co/arcgis/rest/services/catalogo_sismos/catalogo_de_sismos_2/MapServer/0/query",
     )
+    # Fecha real del sismo en la capa ArcGIS (milisegundos o Date).
+    sgc_time_field: str = os.getenv("SGC_TIME_FIELD", "ESP_FECHA_LONG")
+    # Se puede encender tras verificar que la fuente oficial publica eventos recientes.
+    sgc_poll_enabled: bool = _bool("SGC_POLL_ENABLED", False)
+    sgc_poll_interval_seconds: int = _int("SGC_POLL_INTERVAL_SECONDS", 60)
     sirdec_soda_url: str = os.getenv("SIRDEC_SODA_URL", "https://www.datos.gov.co/resource/8hqm-7fdt.json")
     sirdec_public_portal_url: str = os.getenv(
         "SIRDEC_PUBLIC_PORTAL_URL",
