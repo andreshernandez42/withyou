@@ -1,0 +1,62 @@
+................................................                         [100%]
+=============================== warnings summary ===============================
+../.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /workspace/scratch/08061fba195c/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+================================ tests coverage ================================
+_______________ coverage: platform linux, python 3.12.14-final-0 _______________
+
+Name                                        Stmts   Miss  Cover
+---------------------------------------------------------------
+backend/app/__init__.py                         0      0   100%
+backend/app/adapters/ideam.py                  11      6    45%
+backend/app/adapters/sgc.py                   110     22    80%
+backend/app/adapters/sgc_recent.py             68     56    18%
+backend/app/adapters/sirdec.py                 15      9    40%
+backend/app/api/router.py                       5      0   100%
+backend/app/api/routes/__init__.py              0      0   100%
+backend/app/api/routes/admin.py                29      8    72%
+backend/app/api/routes/auth.py                 62     10    84%
+backend/app/api/routes/cases.py                53     16    70%
+backend/app/api/routes/checkpoints.py          40      3    92%
+backend/app/api/routes/contacts.py             57     14    75%
+backend/app/api/routes/events.py               50      6    88%
+backend/app/api/routes/notifications.py        20      3    85%
+backend/app/api/routes/official.py             21      6    71%
+backend/app/api/routes/personal_safety.py      36      6    83%
+backend/app/api/routes/policies.py             29     11    62%
+backend/app/api/routes/privacy.py              36      3    92%
+backend/app/api/routes/safety.py               93     25    73%
+backend/app/api/routes/users.py                59     15    75%
+backend/app/api/routes/welfare.py              85     13    85%
+backend/app/core/config.py                     77     13    83%
+backend/app/core/database.py                   14      0   100%
+backend/app/core/dependencies.py               24      3    88%
+backend/app/core/security.py                   50      6    88%
+backend/app/main.py                            66     19    71%
+backend/app/middleware/security.py             15      0   100%
+backend/app/models/__init__.py                  1      0   100%
+backend/app/models/entities.py                256      0   100%
+backend/app/schemas/api.py                    119      0   100%
+backend/app/seed.py                            32     32     0%
+backend/app/services/common.py                 21      0   100%
+backend/app/services/events.py                 88     11    88%
+backend/app/services/maintenance.py            12      6    50%
+backend/app/services/notifications.py          47     37    21%
+backend/app/services/policy.py                 65     14    78%
+backend/app/services/sgc_sync.py              140     42    70%
+backend/app/services/state_machine.py           3      1    67%
+backend/app/services/timeutils.py              11      3    73%
+backend/app/services/vault.py                  57      6    89%
+backend/app/services/welfare.py                90     20    78%
+backend/app/tools/__init__.py                   0      0   100%
+backend/app/tools/inspect_sgc.py               28     28     0%
+backend/app/workers/__init__.py                 0      0   100%
+backend/app/workers/celery_app.py               6      6     0%
+backend/app/workers/tasks.py                   17     17     0%
+---------------------------------------------------------------
+TOTAL                                        2118    496    77%
+Coverage XML written to file docs/validation/coverage.xml
+48 passed, 1 warning in 52.19s

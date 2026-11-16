@@ -1,0 +1,11 @@
+{
+  "url": "https://api.sgc.gov.co/biweekly/biweekly_earthquakes",
+  "checked_at": "2026-11-16T13:22:57.029656-05:00",
+  "records": 89,
+  "latest": {
+    "id": "SGC2026wotifw",
+    "magnitude": 3.2,
+    "occurred": "2026-11-16T10:25:22-05:00"
+  },
+  "eligible": 0
+}

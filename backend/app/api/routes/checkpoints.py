@@ -1,14 +1,13 @@
 from fastapi import APIRouter,Depends,HTTPException
-from sqlalchemy import select, or_
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.dependencies import current_user
 from app.models import User,Checkpoint
 from app.schemas.api import CheckpointIn
 from app.services.common import audit
-from app.services.vault import create_checkpoint,latest_checkpoint,checkpoint_public
+from app.services.vault import create_checkpoint,latest_checkpoint,checkpoint_public,valid_checkpoint_filter
 from app.services.policy import active_location_grant
-from app.services.timeutils import utcnow
 
 router=APIRouter(tags=["vault"])
 
@@ -29,7 +28,7 @@ def my_latest(user:User=Depends(current_user),db:Session=Depends(get_db)):
 def my_history(limit:int=20,user:User=Depends(current_user),db:Session=Depends(get_db)):
     rows=db.scalars(select(Checkpoint).where(
         Checkpoint.user_id==user.id,
-        or_(Checkpoint.expires_at > utcnow(), Checkpoint.incident_hold==True)  # noqa:E712
+        valid_checkpoint_filter()
     ).order_by(Checkpoint.created_at.desc()).limit(max(1,min(limit,100)))).all()
     return [checkpoint_public(r,'EXACT') for r in rows]
 

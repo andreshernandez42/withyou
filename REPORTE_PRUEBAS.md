@@ -1,33 +1,11 @@
-# Reporte de validación — WithYou / Sismos
+# Validación de WithYou · 16 de noviembre de 2026
 
-**Fecha de revisión:** 2026-11-15. **Base:** `withyou(1).zip` (complementado con `Plataforma_Resiliente_MVP(1).zip` como referencia histórica).
+| Comprobación | Resultado |
+| --- | --- |
+| Catálogo reciente SGC consultado en vivo | 89 registros oficiales en una ventana de 24 horas, consultada a las 13:22, hora de Colombia. Último registro devuelto a las 10:25:22, magnitud 3,2. Ningún registro satisfizo el umbral de magnitud 4,5 dentro de los últimos 30 minutos. |
+| Suite del backend | 48 pruebas aprobadas, 77 % de cobertura de líneas en esa ejecución. Una prueba adicional del flujo completo del catálogo reciente pasó tras el ajuste final. |
+| Prueba del flujo | GeoJSON controlado, checkpoint cercano y lejano, fallo del origen, recuperación, deduplicación y retiro del aviso al responder «Estoy a salvo». |
+| App | Ajustes en la tarjeta y en el estado de la fuente. Prueba final del APK, fidelidad visual exacta y entrega a una app cerrada pendientes en Android. |
+| Despliegue | Incluye configuración y script de arranque. Docker Desktop y Flutter no están disponibles para repetir el despliegue y la compilación móvil de este ZIP. |
 
-## Ejecución verificada en este entorno
-
-Comando ejecutado en `backend/`:
-
-```bash
-pytest -q tests --disable-warnings
-pytest --cov=app --cov-report=term-missing:skip-covered -q tests --disable-warnings
-```
-
-**23 pruebas aprobadas, 0 fallidas; cobertura global del backend: 78 %.** Pruebas realizadas sin red pública y sobre base SQLite efímera. Se verificaron los siguientes comportamientos:
-
-- Auth JWT/refresh, rutas protegidas, roles y políticas.
-- Checkpoints cifrados, recuperación, vencimiento y acceso contextual.
-- Simulaciones sísmicas y filtro geográfico, safety check, respuesta SAFE y solicitudes de ayuda.
-- Ausencia de liberación de ubicación para un evento TEST y ausencia de notificación TEST a contactos ordinarios.
-- Quórum de confianza y SOS.
-- Parseo de respuesta JSON ArcGIS mock, filtro por tiempo real, control de errores, ausencia de paginación `resultRecordCount` y conversión de coordenadas.
-- Ingesta y deduplicación de sismos `source=SGC` mediante respuestas controladas; rechazo de fechas ausentes, antiguas y futuras.
-- Endpoints HTTP 200 **en TestClient y respuestas ArcGIS simuladas** (no son pruebas live de servicio externo).
-
-## No ejecutado / sin certificación
-
-- Flutter `analyze`, `flutter test` y `flutter run` con el código modificado: Flutter SDK/Android no instalados en este entorno. Se incluye `mobile/test/widget_test.dart` para ejecutarlo en el equipo del proyecto.
-- Consulta en vivo de SGC/EPIS: este entorno no tiene búsqueda/conectividad externa. Las anteriores consultas que compartió el usuario probaron que el catálogo configurado devuelve registros históricos y cero eventos desde 2026.
-- Recepción push FCM con la app cerrada: faltan credenciales Firebase, SDK cliente configurado y dispositivos de prueba.
-- Pruebas de rendimiento y resiliencia multi-contenedor en Docker; el motor Docker no está disponible aquí. El usuario puede realizarlas con el script entregado.
-- Validación visual pixel a pixel de todas las pantallas: el prototipo adopta la estructura de las tres acciones principales del mockup, sin certificar coincidencia exacta.
-
-**Conclusión:** validación automatizada local del backend satisfactoria; no se declara cierre del 100 % ni aptitud de producción hasta superar las pruebas externas y móviles pendientes.
+La evidencia está en `docs/validation/sgc_recent_live.json`, `pytest_actual.txt` y `pytest_sgc_recent.txt`. `sgc_live.json` contiene la comprobación previa de metadatos de EPIS y no corresponde al feed de avisos. El resultado controlado demuestra el procesamiento de la aplicación, mientras la consulta de 24 horas confirma la lectura de datos del proveedor.

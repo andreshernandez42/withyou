@@ -1,19 +1,19 @@
 from datetime import timedelta
 from sqlalchemy import select
-from app.models import User,Checkpoint,ConsentPolicy,WelfareCheck,SafetyStatus,LocationAccessGrant
+from app.models import User,Checkpoint,ConsentPolicy,WelfareCheck,SafetyStatus,LocationAccessGrant,EmergencyEvent
 from app.services.timeutils import utcnow
 from app.services.vault import cleanup_expired
-from app.services.events import process_safety_timeouts
+from app.services.events import process_safety_timeouts, trigger_checkins
 from conftest import register,login,auth
 
 
-def make_tester(db,email='andres@example.com'):
-    u=db.scalar(select(User).where(User.email==email));u.role='TESTER';db.commit();return u
+def make_admin(db,email='andres@example.com'):
+    u=db.scalar(select(User).where(User.email==email));u.role='ADMIN';db.commit();return u
 
 
 def setup_circle(client,db):
     a=register(client,'Andrés','andres@example.com');m=register(client,'Mamá','mama@example.com');f=register(client,'Amiga','amiga@example.com');v=register(client,'Vecino','vecino@example.com')
-    make_tester(db)
+    make_admin(db)
     ta=login(client,'andres@example.com')['access_token'];tm=login(client,'mama@example.com')['access_token'];tf=login(client,'amiga@example.com')['access_token'];tv=login(client,'vecino@example.com')['access_token']
     contact_ids=[]
     for email,name,tok in [('mama@example.com','Mamá',tm),('amiga@example.com','Amiga',tf)]:
@@ -67,20 +67,22 @@ def test_magnitude_filter_and_relevant_event(client,db):
     assert len(pending)>=1
 
 
-def test_simulated_safe_response_does_not_notify_regular_contacts(client,db):
+def test_safe_response_notifies_contacts(client,db):
     s=setup_circle(client,db)
     client.post('/api/v1/checkpoints',headers=auth(s['ta']),json={'latitude':4.711,'longitude':-74.072})
-    e=client.post('/api/v1/test/emergency-events',headers=auth(s['ta']),json={'type':'FLOOD','source':'TEST-FLOOD','latitude':4.71,'longitude':-74.07,'radius_km':20}).json()['event']['id']
+    event=EmergencyEvent(type='FLOOD',source='OFFICIAL-FIXTURE',latitude=4.71,longitude=-74.07,radius_km=20,starts_at=utcnow(),is_test=False)
+    db.add(event);db.flush();trigger_checkins(db,event);db.commit();e=event.id
     r=client.post('/api/v1/safety/respond',headers=auth(s['ta']),json={'status':'SAFE','event_id':e})
     assert r.status_code==200 and r.json()['status']=='SAFE'
     notes=client.get('/api/v1/notifications?pending_only=true',headers=auth(s['tm'])).json()
-    assert not any(n['type']=='STATUS_UPDATE' for n in notes)
+    assert any(n['type']=='STATUS_UPDATE' for n in notes)
 
 
 def test_no_response_is_not_missing_and_can_grant_by_policy(client,db):
     s=setup_circle(client,db)
     client.post('/api/v1/checkpoints',headers=auth(s['ta']),json={'latitude':4.711,'longitude':-74.072})
-    e=client.post('/api/v1/test/emergency-events',headers=auth(s['ta']),json={'type':'LANDSLIDE','source':'TEST-LANDSLIDE','latitude':4.71,'longitude':-74.07,'radius_km':20}).json()['event']['id']
+    event=EmergencyEvent(type='LANDSLIDE',source='OFFICIAL-FIXTURE',latitude=4.71,longitude=-74.07,radius_km=20,starts_at=utcnow(),is_test=False)
+    db.add(event);db.flush();trigger_checkins(db,event);db.commit();e=event.id
     row=db.scalar(select(SafetyStatus).where(SafetyStatus.user_id==s['a']['id'],SafetyStatus.event_id==e));row.expires_at=utcnow()-timedelta(seconds=1);db.commit()
     db.expire_all();processed=process_safety_timeouts(db);db.commit();assert processed>=1
     row=db.scalar(select(SafetyStatus).where(SafetyStatus.user_id==s['a']['id'],SafetyStatus.event_id==e));assert row.status=='NO_RESPONSE'
@@ -152,7 +154,7 @@ def test_minor_cannot_join_community_and_is_not_auto_targeted(client,db):
     minor=client.post('/api/v1/auth/register',json={'full_name':'Menor Sintético','email':'minor@example.com','password':'StrongPass2026!','is_minor':True}).json()
     tmn=login(client,'minor@example.com')['access_token']
     assert client.patch('/api/v1/me',headers=auth(tmn),json={'community_opt_in':True}).status_code==403
-    tester=register(client,'Tester Adulto','tester@example.com');u=db.scalar(select(User).where(User.email=='tester@example.com'));u.role='TESTER';db.commit();tt=login(client,'tester@example.com')['access_token']
+    tester=register(client,'Tester Adulto','tester@example.com');u=db.scalar(select(User).where(User.email=='tester@example.com'));u.role='ADMIN';db.commit();tt=login(client,'tester@example.com')['access_token']
     client.post('/api/v1/checkpoints',headers=auth(tmn),json={'latitude':4.71,'longitude':-74.07})
     e=client.post('/api/v1/test/emergency-events',headers=auth(tt),json={'type':'EARTHQUAKE','source':'TEST','latitude':4.71,'longitude':-74.07,'radius_km':20,'magnitude':6.5})
     assert minor['id'] not in e.json()['affected_users']
@@ -168,7 +170,7 @@ def test_location_grant_can_be_revoked_by_subject(client,db):
     assert client.delete(f'/api/v1/privacy/location-grants/{gid}',headers=auth(s['ta'])).status_code==200
 
 def test_normal_user_cannot_list_test_events(client,db):
-    tester=register(client,'Tester','tester2@example.com');tu=db.scalar(select(User).where(User.email=='tester2@example.com'));tu.role='TESTER';db.commit();tt=login(client,'tester2@example.com')['access_token']
+    tester=register(client,'Tester','tester2@example.com');tu=db.scalar(select(User).where(User.email=='tester2@example.com'));tu.role='ADMIN';db.commit();tt=login(client,'tester2@example.com')['access_token']
     normal=register(client,'Normal','normal2@example.com');tn=login(client,'normal2@example.com')['access_token']
     created=client.post('/api/v1/test/emergency-events',headers=auth(tt),json={'type':'FIRE','source':'TEST-FIRE','latitude':4.71,'longitude':-74.07,'radius_km':5})
     assert created.status_code==201

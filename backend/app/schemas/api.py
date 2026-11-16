@@ -155,6 +155,7 @@ class SafetyModeIn(BaseModel):
 class SOSIn(BaseModel):
     message: str | None = Field(default=None, max_length=500)
     personal_safety_session_id: str | None = None
+    event_id: str | None = None
 
 
 class ExperimentRunIn(BaseModel):

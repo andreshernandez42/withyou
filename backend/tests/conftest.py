@@ -9,9 +9,11 @@ os.environ['DATABASE_URL']=f'sqlite:///{TEST_DB}'
 os.environ['TOKEN_SECRET']='test-secret-123456789012345678901234567890'
 os.environ['ALLOW_TEST_ENDPOINTS']='true'
 os.environ['CELERY_ENABLED']='false'
+os.environ['SGC_POLL_ENABLED']='false'
+os.environ['SGC_SOURCE']='arcgis'
 os.environ['TRUSTED_HOSTS']='localhost,127.0.0.1,testserver'
 os.environ['ALLOWED_ORIGINS']='http://localhost'
-os.environ['SAFETY_CHECK_TIMEOUT_SECONDS']='1'
+os.environ['SAFETY_CHECK_TIMEOUT_SECONDS']='300'
 
 import pytest
 from fastapi.testclient import TestClient

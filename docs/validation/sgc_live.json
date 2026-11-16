@@ -1,0 +1,342 @@
+{
+  "checked_at": "2026-11-15T19:04:43.730924+00:00",
+  "services": [
+    {
+      "name": "EPIS directory (not earthquakes)",
+      "url": "https://srvags.sgc.gov.co/arcgis/rest/services/EPIS",
+      "http_status": 200,
+      "ok": true,
+      "error": null,
+      "layers": null,
+      "tasks": null,
+      "services": [
+        {
+          "name": "EPIS/ClipTools",
+          "type": "GPServer"
+        },
+        {
+          "name": "EPIS/EPIS_V2",
+          "type": "FeatureServer"
+        },
+        {
+          "name": "EPIS/EPIS_V2",
+          "type": "MapServer"
+        },
+        {
+          "name": "EPIS/ExportTools",
+          "type": "GPServer"
+        }
+      ],
+      "execution_type": null
+    },
+    {
+      "name": "petroleum FeatureServer",
+      "url": "https://srvags.sgc.gov.co/arcgis/rest/services/EPIS/EPIS_V2/FeatureServer",
+      "http_status": 200,
+      "ok": true,
+      "error": null,
+      "layers": [
+        {
+          "id": 0,
+          "name": "POZOS",
+          "parentLayerId": -1,
+          "defaultVisibility": true,
+          "subLayerIds": null,
+          "minScale": 750000,
+          "maxScale": 0,
+          "type": "Feature Layer",
+          "geometryType": "esriGeometryPoint"
+        },
+        {
+          "id": 1,
+          "name": "LINEAS_SISMICAS_2D",
+          "parentLayerId": -1,
+          "defaultVisibility": true,
+          "subLayerIds": null,
+          "minScale": 750000,
+          "maxScale": 0,
+          "type": "Feature Layer",
+          "geometryType": "esriGeometryPolyline"
+        },
+        {
+          "id": 2,
+          "name": "SISMICA_3D",
+          "parentLayerId": -1,
+          "defaultVisibility": true,
+          "subLayerIds": null,
+          "minScale": 750000,
+          "maxScale": 0,
+          "type": "Feature Layer",
+          "geometryType": "esriGeometryPolygon"
+        },
+        {
+          "id": 3,
+          "name": "DEPARTAMENTOS",
+          "parentLayerId": -1,
+          "defaultVisibility": true,
+          "subLayerIds": null,
+          "minScale": 0,
+          "maxScale": 500000,
+          "type": "Feature Layer",
+          "geometryType": "esriGeometryPolygon"
+        },
+        {
+          "id": 4,
+          "name": "MUNICIPIOS",
+          "parentLayerId": -1,
+          "defaultVisibility": true,
+          "subLayerIds": null,
+          "minScale": 500000,
+          "maxScale": 0,
+          "type": "Feature Layer",
+          "geometryType": "esriGeometryPolygon"
+        },
+        {
+          "id": 5,
+          "name": "CUENCAS",
+          "parentLayerId": -1,
+          "defaultVisibility": true,
+          "subLayerIds": null,
+          "minScale": 0,
+          "maxScale": 500000,
+          "type": "Feature Layer",
+          "geometryType": "esriGeometryPolygon"
+        },
+        {
+          "id": 6,
+          "name": "CONTRATOS",
+          "parentLayerId": -1,
+          "defaultVisibility": true,
+          "subLayerIds": null,
+          "minScale": 0,
+          "maxScale": 0,
+          "type": "Feature Layer",
+          "geometryType": "esriGeometryPolygon"
+        },
+        {
+          "id": 7,
+          "name": "Drenaje Sencillo 100K",
+          "parentLayerId": -1,
+          "defaultVisibility": false,
+          "subLayerIds": null,
+          "minScale": 1000000,
+          "maxScale": 0,
+          "type": "Feature Layer",
+          "geometryType": "esriGeometryPolyline"
+        },
+        {
+          "id": 8,
+          "name": "Vias 100K",
+          "parentLayerId": -1,
+          "defaultVisibility": false,
+          "subLayerIds": null,
+          "minScale": 1000000,
+          "maxScale": 0,
+          "type": "Feature Layer",
+          "geometryType": "esriGeometryPolyline"
+        },
+        {
+          "id": 9,
+          "name": "Drenaje Doble 100K",
+          "parentLayerId": -1,
+          "defaultVisibility": false,
+          "subLayerIds": null,
+          "minScale": 1000000,
+          "maxScale": 0,
+          "type": "Feature Layer",
+          "geometryType": "esriGeometryPolygon"
+        },
+        {
+          "id": 10,
+          "name": "PROGRAMAS_2D",
+          "parentLayerId": -1,
+          "defaultVisibility": true,
+          "subLayerIds": null,
+          "minScale": 750000,
+          "maxScale": 0,
+          "type": "Feature Layer",
+          "geometryType": "esriGeometryPolygon"
+        }
+      ],
+      "tasks": null,
+      "services": null,
+      "execution_type": null
+    },
+    {
+      "name": "petroleum MapServer",
+      "url": "https://srvags.sgc.gov.co/arcgis/rest/services/EPIS/EPIS_V2/MapServer",
+      "http_status": 200,
+      "ok": true,
+      "error": null,
+      "layers": [
+        {
+          "id": 0,
+          "name": "POZOS",
+          "parentLayerId": -1,
+          "defaultVisibility": true,
+          "subLayerIds": null,
+          "minScale": 750000,
+          "maxScale": 0,
+          "type": "Feature Layer",
+          "geometryType": "esriGeometryPoint"
+        },
+        {
+          "id": 1,
+          "name": "LINEAS_SISMICAS_2D",
+          "parentLayerId": -1,
+          "defaultVisibility": true,
+          "subLayerIds": null,
+          "minScale": 750000,
+          "maxScale": 0,
+          "type": "Feature Layer",
+          "geometryType": "esriGeometryPolyline"
+        },
+        {
+          "id": 2,
+          "name": "SISMICA_3D",
+          "parentLayerId": -1,
+          "defaultVisibility": true,
+          "subLayerIds": null,
+          "minScale": 750000,
+          "maxScale": 0,
+          "type": "Feature Layer",
+          "geometryType": "esriGeometryPolygon"
+        },
+        {
+          "id": 3,
+          "name": "DEPARTAMENTOS",
+          "parentLayerId": -1,
+          "defaultVisibility": true,
+          "subLayerIds": null,
+          "minScale": 0,
+          "maxScale": 500000,
+          "type": "Feature Layer",
+          "geometryType": "esriGeometryPolygon"
+        },
+        {
+          "id": 4,
+          "name": "MUNICIPIOS",
+          "parentLayerId": -1,
+          "defaultVisibility": true,
+          "subLayerIds": null,
+          "minScale": 500000,
+          "maxScale": 0,
+          "type": "Feature Layer",
+          "geometryType": "esriGeometryPolygon"
+        },
+        {
+          "id": 5,
+          "name": "CUENCAS",
+          "parentLayerId": -1,
+          "defaultVisibility": true,
+          "subLayerIds": null,
+          "minScale": 0,
+          "maxScale": 500000,
+          "type": "Feature Layer",
+          "geometryType": "esriGeometryPolygon"
+        },
+        {
+          "id": 6,
+          "name": "CONTRATOS",
+          "parentLayerId": -1,
+          "defaultVisibility": true,
+          "subLayerIds": null,
+          "minScale": 0,
+          "maxScale": 0,
+          "type": "Feature Layer",
+          "geometryType": "esriGeometryPolygon"
+        },
+        {
+          "id": 7,
+          "name": "Drenaje Sencillo 100K",
+          "parentLayerId": -1,
+          "defaultVisibility": false,
+          "subLayerIds": null,
+          "minScale": 1000000,
+          "maxScale": 0,
+          "type": "Feature Layer",
+          "geometryType": "esriGeometryPolyline"
+        },
+        {
+          "id": 8,
+          "name": "Vias 100K",
+          "parentLayerId": -1,
+          "defaultVisibility": false,
+          "subLayerIds": null,
+          "minScale": 1000000,
+          "maxScale": 0,
+          "type": "Feature Layer",
+          "geometryType": "esriGeometryPolyline"
+        },
+        {
+          "id": 9,
+          "name": "Drenaje Doble 100K",
+          "parentLayerId": -1,
+          "defaultVisibility": false,
+          "subLayerIds": null,
+          "minScale": 1000000,
+          "maxScale": 0,
+          "type": "Feature Layer",
+          "geometryType": "esriGeometryPolygon"
+        },
+        {
+          "id": 10,
+          "name": "PROGRAMAS_2D",
+          "parentLayerId": -1,
+          "defaultVisibility": true,
+          "subLayerIds": null,
+          "minScale": 750000,
+          "maxScale": 0,
+          "type": "Feature Layer",
+          "geometryType": "esriGeometryPolygon"
+        }
+      ],
+      "tasks": null,
+      "services": null,
+      "execution_type": null
+    },
+    {
+      "name": "ClipTools metadata",
+      "url": "https://srvags.sgc.gov.co/arcgis/rest/services/EPIS/ClipTools/GPServer",
+      "http_status": 200,
+      "ok": true,
+      "error": null,
+      "layers": null,
+      "tasks": [
+        "Clip Tools"
+      ],
+      "services": null,
+      "execution_type": "esriExecutionTypeAsynchronous"
+    },
+    {
+      "name": "ExportTools metadata",
+      "url": "https://srvags.sgc.gov.co/arcgis/rest/services/EPIS/ExportTools/GPServer",
+      "http_status": 200,
+      "ok": true,
+      "error": null,
+      "layers": null,
+      "tasks": [
+        "Export Tools"
+      ],
+      "services": null,
+      "execution_type": "esriExecutionTypeAsynchronous"
+    },
+    {
+      "name": "earthquake layer",
+      "url": "https://srvags.sgc.gov.co/arcgis/rest/services/catalogo_sismos/catalogo_de_sismos_2/MapServer/0",
+      "http_status": 200,
+      "ok": true,
+      "error": null,
+      "layers": null,
+      "tasks": null,
+      "services": null,
+      "execution_type": null
+    }
+  ],
+  "ingestion": {
+    "ok": true,
+    "recent_records": 0,
+    "records": []
+  },
+  "note": "Metadata verification only for GPServer; no paid or state-changing jobs submitted. A successful empty time window is not evidence of a recent earthquake."
+}

@@ -1,0 +1,88 @@
+.F..................................                                     [100%]
+=================================== FAILURES ===================================
+___ test_simulations_do_not_notify_standard_users_and_replies_are_idempotent ___
+
+client = <starlette.testclient.TestClient object at 0x7fa5d7e71820>
+db = <sqlalchemy.orm.session.Session object at 0x7fa5d7cf1310>
+
+    def test_simulations_do_not_notify_standard_users_and_replies_are_idempotent(client, db):
+        a = register(client, 'Admin', 'admin-alert@example.com')
+        register(client, 'User', 'user-alert@example.com')
+        user = db.get(User, a['id']); user.role = 'ADMIN'; db.commit()
+        ha = auth(login(client, 'admin-alert@example.com')['access_token'])
+        hu = auth(login(client, 'user-alert@example.com')['access_token'])
+        for h in [ha, hu]:
+            assert client.post('/api/v1/checkpoints', headers=h, json={'latitude': 4.7, 'longitude': -74.1}).status_code == 201
+        result = client.post('/api/v1/test/emergency-events', headers=ha,
+            json={'type': 'EARTHQUAKE', 'latitude': 4.7, 'longitude': -74.1, 'magnitude': 6})
+        assert result.status_code == 201
+        event = result.json()['event_id']
+        assert client.get('/api/v1/safety/pending', headers=hu).json() == []
+        assert client.get('/api/v1/events/' + event, headers=hu).status_code == 404
+        pending = client.get('/api/v1/safety/pending', headers=ha).json()[0]
+>       assert pending['is_test'] is True and pending['expires_at'].endswith('Z')
+E       AssertionError: assert (True is True and False)
+E        +  where False = <built-in method endswith of str object at 0x7fa5d7b350c0>('Z')
+E        +    where <built-in method endswith of str object at 0x7fa5d7b350c0> = '2026-11-15T19:05:03.143511+00:00'.endswith
+
+withyou/backend/tests/test_alert_roles.py:21: AssertionError
+=============================== warnings summary ===============================
+.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /workspace/scratch/08061fba195c/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+================================ tests coverage ================================
+_______________ coverage: platform linux, python 3.12.14-final-0 _______________
+
+Name                                                Stmts   Miss  Cover   Missing
+---------------------------------------------------------------------------------
+withyou/backend/app/__init__.py                         0      0   100%
+withyou/backend/app/adapters/ideam.py                  11      6    45%   13-18
+withyou/backend/app/adapters/sgc.py                   110     22    80%   23, 31-32, 55, 68-78, 88, 101, 103, 111, 120, 124, 129
+withyou/backend/app/adapters/sirdec.py                 15      9    40%   12-19, 28
+withyou/backend/app/api/router.py                       5      0   100%
+withyou/backend/app/api/routes/__init__.py              0      0   100%
+withyou/backend/app/api/routes/admin.py                29      8    72%   16-17, 21, 25-26, 30-31, 35
+withyou/backend/app/api/routes/auth.py                 62     10    84%   37, 53, 65, 68, 78-87
+withyou/backend/app/api/routes/cases.py                53     16    70%   28-32, 34, 36, 42, 46-49, 53-59
+withyou/backend/app/api/routes/checkpoints.py          40      3    92%   38-40
+withyou/backend/app/api/routes/contacts.py             57     14    75%   41-42, 47-48, 61-64, 69-74
+withyou/backend/app/api/routes/events.py               46      4    91%   45, 49-51
+withyou/backend/app/api/routes/notifications.py        20      3    85%   21-23
+withyou/backend/app/api/routes/official.py             21      6    71%   12-13, 17, 21-22, 26
+withyou/backend/app/api/routes/personal_safety.py      36      6    83%   32-34, 38-40
+withyou/backend/app/api/routes/policies.py             29     11    62%   13, 22, 26-27, 31-34, 38-40
+withyou/backend/app/api/routes/privacy.py              36      3    92%   35, 43-44
+withyou/backend/app/api/routes/safety.py               76     20    74%   22, 33, 37, 39-41, 45-46, 48, 53-54, 60-62, 64-66, 84-86
+withyou/backend/app/api/routes/users.py                59     15    75%   21, 38, 60-67, 72-73, 78-81
+withyou/backend/app/api/routes/welfare.py              85     13    85%   23, 28, 32-35, 42-43, 51, 65-66, 89-90
+withyou/backend/app/core/config.py                     72     12    83%   16-17, 23-24, 91-98
+withyou/backend/app/core/database.py                   14      0   100%
+withyou/backend/app/core/dependencies.py               24      3    88%   12, 15, 18
+withyou/backend/app/core/security.py                   50      6    88%   24-25, 45-46, 76-77
+withyou/backend/app/main.py                            66     19    71%   17-22, 28, 40-41, 72, 76, 80, 85-91
+withyou/backend/app/middleware/security.py             15      0   100%
+withyou/backend/app/models/__init__.py                  1      0   100%
+withyou/backend/app/models/entities.py                256      0   100%
+withyou/backend/app/schemas/api.py                    118      0   100%
+withyou/backend/app/seed.py                            32     32     0%   1-43
+withyou/backend/app/services/common.py                 21      0   100%
+withyou/backend/app/services/events.py                 82     11    87%   16, 18, 22, 24, 30, 33, 38, 42, 94-96
+withyou/backend/app/services/maintenance.py            12      6    50%   9-14
+withyou/backend/app/services/notifications.py          47     37    21%   12-22, 26-55
+withyou/backend/app/services/policy.py                 65     14    78%   27, 31, 47, 73-83, 89, 98, 113
+withyou/backend/app/services/sgc_sync.py               88     12    86%   31, 83-85, 103-104, 109-115
+withyou/backend/app/services/state_machine.py           3      1    67%   11
+withyou/backend/app/services/timeutils.py              11      3    73%   12-14
+withyou/backend/app/services/vault.py                  57      6    89%   16, 20-22, 78-79
+withyou/backend/app/services/welfare.py                90     20    78%   15, 18, 56-57, 60, 66, 84, 93, 96, 98, 108, 110, 116, 125, 132, 139-147
+withyou/backend/app/workers/__init__.py                 0      0   100%
+withyou/backend/app/workers/celery_app.py               6      6     0%   1-19
+withyou/backend/app/workers/tasks.py                   17     17     0%   1-20
+---------------------------------------------------------------------------------
+TOTAL                                                1937    374    81%
+Coverage XML written to file withyou/docs/validation/coverage.xml
+=========================== short test summary info ============================
+FAILED withyou/backend/tests/test_alert_roles.py::test_simulations_do_not_notify_standard_users_and_replies_are_idempotent
+1 failed, 35 passed, 1 warning in 18.62s

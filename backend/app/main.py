@@ -1,6 +1,7 @@
 from __future__ import annotations
 import asyncio
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, suppress
+import logging
 from fastapi import FastAPI
 from sqlalchemy import text
 from fastapi.middleware.cors import CORSMiddleware
@@ -12,29 +13,40 @@ from app.middleware.security import SecurityHeadersMiddleware
 from app import models  # noqa: F401
 from app.services.maintenance import maintenance_tick
 
-async def maintenance_loop():
-    while True:
-        await asyncio.sleep(settings.cleanup_interval_seconds)
-        db=SessionLocal()
+def run_maintenance():
+    with SessionLocal() as db:
         try:
             maintenance_tick(db)
         except Exception:
             db.rollback()
-        finally:
-            db.close()
+            logging.getLogger(__name__).exception('Maintenance failed')
+
+
+async def maintenance_loop():
+    while True:
+        await asyncio.sleep(settings.cleanup_interval_seconds)
+        await asyncio.to_thread(run_maintenance)
+
 
 @asynccontextmanager
 async def lifespan(app:FastAPI):
     validate_runtime_settings()
-    # Bootstrap solo para DEV/TEST. En producción se exige Alembic.
     if settings.auto_create_schema:
         Base.metadata.create_all(bind=engine)
-    task=None
+    tasks = []
     if not settings.celery_enabled:
-        task=asyncio.create_task(maintenance_loop())
-    yield
-    if task:
-        task.cancel()
+        tasks.append(asyncio.create_task(maintenance_loop()))
+        if getattr(settings, 'sgc_poll_enabled', True):
+            from app.services.sgc_sync import sgc_poll_loop
+            tasks.append(asyncio.create_task(sgc_poll_loop()))
+    try:
+        yield
+    finally:
+        for task in tasks:
+            task.cancel()
+        for task in tasks:
+            with suppress(asyncio.CancelledError):
+                await task
 
 app=FastAPI(
     title=settings.app_name,

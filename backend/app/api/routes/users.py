@@ -34,7 +34,7 @@ def update_me(payload: ProfileUpdateIn, user: User = Depends(current_user), db: 
 @router.get("/users")
 def users(user: User = Depends(current_user), db: Session = Depends(get_db)):
     # Compatibilidad con el frontend existente sin exponer un directorio global a usuarios normales.
-    if user.role in {"TESTER","ADMIN"}:
+    if user.role == "ADMIN":
         rows = db.scalars(select(User).where(User.id != user.id, User.status == "ACTIVE")).all()
     else:
         rels=db.scalars(select(TrustedContact).where(TrustedContact.contact_user_id==user.id,TrustedContact.status=="ACCEPTED",TrustedContact.revoked_at.is_(None))).all()
@@ -62,9 +62,7 @@ def upsert_device(payload: DeviceIn, user: User = Depends(current_user), db: Ses
         row=Device(user_id=user.id,device_uid=payload.device_uid,platform=payload.platform,device_name=payload.device_name,push_token=payload.push_token)
         db.add(row); db.flush()
     else:
-        row.platform=payload.platform; row.device_name=payload.device_name
-        if payload.push_token is not None: row.push_token=payload.push_token
-        row.active=True; row.last_seen_at=utcnow()
+        row.platform=payload.platform; row.device_name=payload.device_name; row.push_token=payload.push_token; row.active=True; row.last_seen_at=utcnow()
     audit(db,user.id,"DEVICE_UPSERT","device",row.id,metadata={"platform":row.platform}); db.commit()
     return {"id":row.id,"device_uid":row.device_uid,"platform":row.platform,"device_name":row.device_name,"active":row.active}
 

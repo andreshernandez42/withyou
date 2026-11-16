@@ -4,13 +4,16 @@ from app.core.security import hash_password
 from app.models import User,TrustedContact,ConsentPolicy
 
 DEMO=[
- ('Andrés Demo','andres@example.com','DemoAndres2026!','TESTER',False),
+ ('Andrés Demo','andres@example.com','DemoAndres2026!','ADMIN',False),
  ('Mamá Demo','mama@example.com','DemoMama2026!','USER',True),
  ('Amiga Demo','amiga@example.com','DemoAmiga2026!','USER',True),
  ('Vecino Demo','vecino@example.com','DemoVecino2026!','USER',True),
 ]
 
 def run():
+    from app.core.config import settings
+    if settings.is_production:
+        raise RuntimeError("Los usuarios demo no se pueden crear en producción")
     Base.metadata.create_all(bind=engine)
     db=SessionLocal()
     try:
@@ -22,7 +25,7 @@ def run():
                 db.add(u);db.flush()
                 db.add(ConsentPolicy(user_id=u.id,quorum_required=2,allow_exact_location=True,allow_coarse_location=True,
                                      allow_community_check=(email=='andres@example.com'),release_after_quorum=True,
-                                     release_on_official_event_no_response=False,access_ttl_minutes=60))
+                                     release_on_official_event_no_response=True,access_ttl_minutes=60))
             else:
                 u.role=role;u.community_opt_in=community
             users[email]=u

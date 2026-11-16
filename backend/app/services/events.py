@@ -18,6 +18,8 @@ def event_is_current(event: EmergencyEvent) -> bool:
         return False
     if event.type.upper() == "EARTHQUAKE":
         age = utcnow() - as_utc(event.starts_at or event.created_at)
+        if age < -timedelta(minutes=5):
+            return False
         if age > timedelta(minutes=settings.earthquake_max_age_minutes) and not event.is_test:
             return False
     return True
@@ -48,8 +50,7 @@ def trigger_checkins(db: Session, event: EmergencyEvent) -> list[str]:
     affected: list[str] = []
     users = db.scalars(select(User).where(User.status == "ACTIVE", User.is_minor == False)).all()  # noqa: E712
     for user in users:
-        # Una simulación nunca debe dirigirse a usuarios normales.
-        if event.is_test and user.role not in {'TESTER', 'ADMIN'}:
+        if event.is_test and user.role != "ADMIN":
             continue
         cp = latest_checkpoint(db, user.id)
         if not cp:
@@ -100,7 +101,7 @@ def process_safety_timeouts(db: Session) -> int:
         event = db.get(EmergencyEvent, row.event_id) if row.event_id else None
         notify(db, row.user_id, "SAFETY_CHECK_TIMEOUT", "Estado aún no confirmado",
                "No se recibió respuesta al check-in. Esto no significa que la persona esté desaparecida.",
-               {"event_id": row.event_id})
+               {"event_id": row.event_id, "is_test": bool(event and event.is_test)})
         # Notifica a contactos, sin revelar ubicación todavía salvo política preautorizada.
         contacts = db.scalars(select(TrustedContact).where(
             TrustedContact.owner_user_id == row.user_id,

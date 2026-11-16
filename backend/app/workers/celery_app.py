@@ -11,12 +11,13 @@ celery_app.conf.update(
         'maintenance-every-minute':{
             'task':'app.workers.tasks.maintenance_task',
             'schedule':max(15,settings.cleanup_interval_seconds),
-        },
-        **({
-            'sgc-recent-earthquakes': {
-                'task': 'app.workers.tasks.sgc_poll_task',
-                'schedule': max(30, settings.sgc_poll_interval_seconds),
-            },
-        } if settings.sgc_poll_enabled else {}),
+        }
     },
 )
+
+if getattr(settings, 'sgc_poll_enabled', True):
+    celery_app.conf.beat_schedule['sgc-poll'] = {
+        'task': 'app.workers.tasks.sgc_poll_task',
+        'schedule': max(5, getattr(settings, 'sgc_poll_interval_seconds', 30)),
+        'options': {'expires': max(5, getattr(settings, 'sgc_poll_interval_seconds', 30))},
+    }

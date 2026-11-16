@@ -10,216 +10,156 @@ class HomeScreen extends StatefulWidget {
   @override State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
-  Map<String, dynamic>? me;
-  Map<String, dynamic>? checkpoint;
-  List<dynamic> notes = [], pending = [], events = [];
-  Timer? timer;
-  bool busy = false;
+class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
+  Map<String, dynamic>? me, checkpoint;
+  List<dynamic> notes = [], pending = [];
+  Timer? timer, clock;
+  bool busy = false, refreshing = false, foreground = true;
   String? flash;
   late final LocationService location;
 
   @override void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     location = LocationService(widget.api);
     refresh();
-    timer = Timer.periodic(const Duration(seconds: 8), (_) => refresh(silent: true));
+    timer = Timer.periodic(const Duration(seconds: 5), (_) { if (foreground) refresh(silent: true); });
+    clock = Timer.periodic(const Duration(seconds: 1), (_) { if (mounted && foreground && pending.isNotEmpty) setState(() {}); });
   }
-
-  @override void dispose() { timer?.cancel(); super.dispose(); }
+  @override void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    timer?.cancel(); clock?.cancel(); super.dispose();
+  }
+  @override void didChangeAppLifecycleState(AppLifecycleState state) {
+    foreground = state == AppLifecycleState.resumed;
+    if (foreground) refresh(silent: true);
+  }
 
   Future<void> refresh({bool silent = false}) async {
+    if (refreshing) return;
+    refreshing = true;
     try {
-      final u = await widget.api.me();
-      final n = await widget.api.notifications(pendingOnly: true);
-      final p = await widget.api.pendingSafety();
-      final e = await widget.api.officialEvents();
-      Map<String, dynamic>? cp;
-      try { cp = await widget.api.latestCheckpoint(); } catch (_) { /* Aún no tiene uno. */ }
-      if (mounted) setState(() {
-        me = u; notes = n; pending = p; events = e; checkpoint = cp;
-      });
-    } catch (_) {
-      if (!silent && mounted) setState(() => flash = 'No fue posible actualizar la información. Comprueba tu conexión.');
-    }
+      final values = await Future.wait<dynamic>([widget.api.me(), widget.api.notifications(pendingOnly: true), widget.api.pendingSafety()]);
+      if (mounted) setState(() { me = values[0]; notes = values[1]; pending = values[2]; });
+      try {
+        final saved = await widget.api.latestCheckpoint();
+        if (mounted) setState(() => checkpoint = saved);
+      } on ApiException catch (e) {
+        if (e.statusCode == 404 && mounted) setState(() => checkpoint = null);
+      }
+    } catch (e) {
+      if (!silent && mounted) setState(() => flash = e.toString());
+    } finally { refreshing = false; }
   }
 
-  bool get isAdmin => me?['role'] == 'ADMIN' || me?['role'] == 'TESTER';
-
-  Map<String, dynamic>? get activeSafety {
-    if (pending.isEmpty) return null;
-    final s = Map<String, dynamic>.from(pending.first);
-    for (final raw in notes) {
-      final n = Map<String, dynamic>.from(raw);
-      final md = Map<String, dynamic>.from(n['metadata'] ?? {});
-      if ((s['event_id'] != null && md['event_id'] == s['event_id']) ||
-          (s['welfare_check_id'] != null && md['welfare_check_id'] == s['welfare_check_id'])) {
-        return n;
+  Map<String, dynamic>? get activeSafety => pending.isEmpty ? null : Map<String, dynamic>.from(pending.first);
+  Map<String, dynamic>? get activeNote {
+    final active = activeSafety;
+    if (active == null) return null;
+    for (final value in notes) {
+      final metadata = value['metadata'] as Map?;
+      if (metadata != null && ((active['event_id'] != null && metadata['event_id'] == active['event_id']) ||
+          (active['welfare_check_id'] != null && metadata['welfare_check_id'] == active['welfare_check_id']))) {
+        return Map<String, dynamic>.from(value);
       }
     }
-    return {
-      'id': null, 'type': 'SAFETY_CHECK',
-      'metadata': {'event_id': s['event_id'], 'welfare_check_id': s['welfare_check_id'], 'is_test': s['is_test'] == true},
-    };
+    return null;
   }
 
   Future<void> respond(String status) async {
-    final n = activeSafety;
-    if (n == null || busy) return;
+    if (busy) return;
+    final active = activeSafety;
+    final note = activeNote;
     setState(() => busy = true);
     try {
-      final md = Map<String, dynamic>.from(n['metadata'] ?? {});
-      await widget.api.respondSafety(status,
-        eventId: md['event_id']?.toString(),
-        welfareCheckId: md['welfare_check_id']?.toString());
-      if (n['id'] != null) await widget.api.markRead(n['id'].toString());
-      await refresh();
-      if (mounted) setState(() => flash = 'Tu estado quedó registrado.');
-    } catch (e) {
-      if (mounted) setState(() => flash = 'No se pudo registrar tu respuesta: $e');
-    } finally { if (mounted) setState(() => busy = false); }
+      await widget.api.respondSafety(status, eventId: active?['event_id'], welfareCheckId: active?['welfare_check_id']);
+      // A notification acknowledgement must not turn a saved response into an apparent failure.
+      if (note != null) { try { await widget.api.markRead(note['id']); } catch (_) { /* The saved safety status remains authoritative if acknowledgement fails. */ } }
+      if (mounted) setState(() { pending.removeWhere((row) => row['id'] == active?['id']); flash = 'Tu estado se guardó correctamente.'; });
+      await refresh(silent: true);
+    } catch (e) { if (mounted) setState(() => flash = e.toString()); }
+    finally { if (mounted) setState(() => busy = false); }
   }
 
-  Future<void> reportEmergency(bool isTest) async {
-    if (isTest) {
-      setState(() => flash = 'Esta simulación no puede enviar un SOS real.');
-      return;
-    }
-    final confirm = await showDialog<bool>(context: context, builder: (ctx) => AlertDialog(
-      title: const Text('¿Avisar a tus contactos?'),
-      content: const Text('WithYou notificará a tus contactos autorizados. No contacta automáticamente a las autoridades ni garantiza rescate.'),
-      actions: [TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancelar')),
-        FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Enviar SOS'))],
+  Future<void> emergency() async {
+    if (busy) return;
+    final active = activeSafety;
+    final isTest = active?['is_test'] == true;
+    final confirmed = await showDialog<bool>(context: context, builder: (context) => AlertDialog(
+      title: Text(isTest ? 'Registrar emergencia de simulacro' : 'Reportar una emergencia'),
+      content: Text(isTest ? 'El reporte se guardará dentro del simulacro.' : 'Avisaremos a tus contactos de emergencia y compartiremos tu última ubicación guardada, si está disponible.'),
+      actions: [TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancelar')), FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('Enviar aviso'))],
     ));
-    if (confirm != true || !mounted) return;
+    if (confirmed != true || !mounted) return;
     setState(() => busy = true);
     try {
-      await widget.api.startSos(message: 'Necesito ayuda tras evento sísmico');
-      if (mounted) setState(() => flash = 'Solicitud enviada a tus contactos autorizados.');
-    } catch (e) {
-      if (mounted) setState(() => flash = 'No se pudo enviar la solicitud: $e');
-    } finally { if (mounted) setState(() => busy = false); }
+      final result = await widget.api.reportEmergency(eventId: active?['event_id'] as String?);
+      if (mounted) setState(() => flash = result['is_test'] == true ? 'Emergencia registrada en el simulacro.' : 'Emergencia registrada. Se enviará el aviso a tus contactos habilitados.');
+      await refresh(silent: true);
+    } catch (e) { if (mounted) setState(() => flash = e.toString()); }
+    finally { if (mounted) setState(() => busy = false); }
   }
 
   Future<void> capture() async {
-    setState(() => busy = true);
-    try {
-      final cp = await location.captureAndUpload();
-      if (mounted) setState(() => flash = cp == null
-        ? 'Activa la ubicación del dispositivo y concede el permiso.'
-        : 'Ubicación de referencia guardada de forma segura.');
-      if (cp != null) await refresh();
-    } catch (e) {
-      if (mounted) setState(() => flash = 'No pudimos guardar tu ubicación: $e');
-    } finally { if (mounted) setState(() => busy = false); }
-  }
-
-  Future<void> simulate(String type) async {
     if (busy) return;
     setState(() => busy = true);
     try {
-      final cp = await widget.api.latestCheckpoint();
-      final loc = Map<String, dynamic>.from(cp['location'] ?? {});
-      if (loc['lat'] == null || loc['lon'] == null) {
-        throw StateError('Guarda un checkpoint antes de simular.');
-      }
-      final result = await widget.api.createTestEvent(type: type,
-        lat: (loc['lat'] as num).toDouble(), lon: (loc['lon'] as num).toDouble());
+      final saved = await location.captureAndUpload();
+      if (mounted) setState(() { if (saved != null) checkpoint = saved; flash = saved == null ? 'Activa la ubicación y permite el acceso para guardar tu posición.' : 'Tu ubicación se guardó de forma privada.'; });
+    } catch (_) { if (mounted) setState(() => flash = 'No pudimos guardar tu ubicación. Revisa los permisos y la conexión e inténtalo de nuevo.'); }
+    finally { if (mounted) setState(() => busy = false); }
+  }
+
+  Future<void> simulate() async {
+    if (busy) return;
+    setState(() => busy = true);
+    try {
+      if (checkpoint == null) throw const ApiException('Guarda primero una ubicación para participar en el simulacro.');
+      final lat = (checkpoint!['location']?['lat'] as num?)?.toDouble();
+      final lon = (checkpoint!['location']?['lon'] as num?)?.toDouble();
+      if (lat == null || lon == null) throw const ApiException('Actualiza tu ubicación antes de iniciar el simulacro.');
+      await widget.api.createTestEvent(lat: lat, lon: lon);
       await refresh();
-      if (mounted) setState(() => flash =
-        'Simulación creada. ${result['affected_users']?.length ?? 0} usuarios de laboratorio incluidos.');
-    } catch (e) {
-      if (mounted) setState(() => flash = 'Para probar una alerta, primero guarda tu ubicación. $e');
-    } finally { if (mounted) setState(() => busy = false); }
+      if (mounted) setState(() => flash = 'Simulacro de sismo creado.');
+    } catch (e) { if (mounted) setState(() => flash = e.toString()); }
+    finally { if (mounted) setState(() => busy = false); }
   }
 
   @override Widget build(BuildContext context) {
-    final alert = activeSafety;
-    final metadata = Map<String, dynamic>.from(alert?['metadata'] ?? {});
-    final isTest = metadata['is_test'] == true;
-    return RefreshIndicator(
-      onRefresh: refresh,
-      child: ListView(padding: const EdgeInsets.fromLTRB(20, 20, 20, 100), children: [
-        Row(children: [
-          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            const Text('With You', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 23, color: Color(0xffb44b28))),
-            const SizedBox(height: 4),
-            Text(me == null ? 'Cargando...' : 'Estamos contigo, ${me!['full_name']}.',
-              style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700)),
-          ])),
-          const CircleAvatar(child: Icon(Icons.person)),
-        ]),
-        if (flash != null) Padding(padding: const EdgeInsets.only(top: 12), child: Card(
-          color: const Color(0xfffff4cd), child: Padding(padding: const EdgeInsets.all(12), child: Text(flash!)))),
-        const SizedBox(height: 16),
-        if (alert != null)
-          SafetyCheckCard(
-            title: 'Sismo reportado', subtitle: '¿Estás bien?', isTest: isTest,
-            onSafe: busy ? () {} : () => respond('SAFE'),
-            onHelp: busy ? () {} : () => respond('HELP_REQUIRED'),
-            onUnable: busy ? () {} : () => respond('UNABLE_TO_EXIT'),
-            onReport: busy ? () {} : () => reportEmergency(isTest),
-          )
-        else Card(child: Padding(padding: const EdgeInsets.all(20), child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start, children: [
-            const Icon(Icons.verified_user_outlined, color: Color(0xff4d795f), size: 32),
-            const SizedBox(height: 8),
-            const Text('Sin verificaciones pendientes', style: TextStyle(fontSize: 19, fontWeight: FontWeight.w800)),
-            const SizedBox(height: 6),
-            const Text('Cuando un evento relevante afecte tu zona, te preguntaremos cómo estás.',
-              style: TextStyle(color: Colors.black54)),
-          ]))),
-        const SizedBox(height: 14),
-        Row(children: [
-          Expanded(child: FilledButton.icon(onPressed: busy ? null : capture,
-            icon: const Icon(Icons.my_location), label: const Text('Guardar ubicación'),
-            style: FilledButton.styleFrom(backgroundColor: const Color(0xff4d795f)))),
-          const SizedBox(width: 8),
-          Expanded(child: OutlinedButton.icon(
-            onPressed: () => Navigator.pushNamed(context, '/safety'),
-            icon: const Icon(Icons.shield_outlined), label: const Text('Modo seguridad'))),
-        ]),
-        if (checkpoint != null) Padding(padding: const EdgeInsets.only(top: 8), child: Text(
-          'Última ubicación guardada: ${checkpoint!['created_at']?.toString().replaceFirst('T', ' ').split('.').first ?? 'disponible'}',
-          style: const TextStyle(color: Colors.black54, fontSize: 12))),
-        const SizedBox(height: 22),
-        const Text('Sismos publicados', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
-        const SizedBox(height: 6),
-        const Text('Reportes oficiales recibidos por WithYou. No son predicciones ni alertas tempranas.',
-          style: TextStyle(fontSize: 12, color: Colors.black54)),
-        if (events.isEmpty)
-          const Padding(padding: EdgeInsets.symmetric(vertical: 12),
-            child: Text('Aún no hay eventos oficiales sincronizados.')),
-        ...events.take(4).map((raw) {
-          final e = Map<String, dynamic>.from(raw);
-          return Card(child: ListTile(
-            leading: const Icon(Icons.waves_outlined, color: Color(0xffb44b28)),
-            title: Text('Sismo M${e['magnitude'] ?? '?'} · ${e['source'] ?? ''}'),
-            subtitle: Text('Fecha UTC: ${e['starts_at'] ?? 'no disponible'}'),
-          ));
-        }),
-        if (isAdmin) ...[
-          const SizedBox(height: 22),
-          const Text('Laboratorio de escenarios', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
-          const SizedBox(height: 5),
-          const Text('Solo cuentas de prueba. Los eventos TEST no se envían a usuarios normales.',
-            style: TextStyle(fontSize: 12, color: Colors.black54)),
-          const SizedBox(height: 9),
-          Wrap(spacing: 8, runSpacing: 8, children: [
-            ActionChip(label: const Text('Sismo M6.6'), onPressed: busy ? null : () => simulate('EARTHQUAKE')),
-            ActionChip(label: const Text('Deslizamiento'), onPressed: busy ? null : () => simulate('LANDSLIDE')),
-            ActionChip(label: const Text('Inundación'), onPressed: busy ? null : () => simulate('FLOOD')),
-            ActionChip(label: const Text('Incendio'), onPressed: busy ? null : () => simulate('FIRE')),
-          ]),
+    final active = activeSafety;
+    final name = (me?['full_name'] as String?)?.split(' ').first ?? '';
+    final expires = DateTime.tryParse(active?['expires_at']?.toString() ?? '');
+    final difference = expires?.difference(DateTime.now());
+    final remaining = difference == null ? null : difference.isNegative ? Duration.zero : difference;
+    final savedAt = DateTime.tryParse(checkpoint?['created_at']?.toString() ?? '')?.toLocal();
+    return RefreshIndicator(onRefresh: refresh, child: ListView(
+      physics: const AlwaysScrollableScrollPhysics(), padding: const EdgeInsets.fromLTRB(20, 18, 20, 32),
+      children: [
+        const Row(children: [Icon(Icons.shield_outlined, color: Color(0xffbc4e1b)), SizedBox(width: 8), Text('With You', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: Color(0xffbc4e1b)))]),
+        const SizedBox(height: 24),
+        Text(name.isEmpty ? 'Estamos contigo' : 'Estamos contigo,\n$name.', style: const TextStyle(fontSize: 27, fontWeight: FontWeight.w800)),
+        if (flash != null) ...[const SizedBox(height: 12), Semantics(liveRegion: true, child: Container(padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: const Color(0xfffff3cf), borderRadius: BorderRadius.circular(14)), child: Text(flash!)))],
+        const SizedBox(height: 18),
+        SafetyCheckCard(
+          title: active == null ? 'Tu red de cuidado' : active['event_type'] == 'EARTHQUAKE' ? 'Evento sísmico reportado' : active['event_id'] != null ? 'Evento reportado' : 'Verificación solicitada',
+          subtitle: active == null ? '¿Cómo te encuentras?' : name.isEmpty ? '¿Estás bien?' : '$name, ¿estás bien?',
+          remaining: remaining, isTest: active?['is_test'] == true,
+          onSafe: busy ? null : () => respond('SAFE'), onHelp: busy ? null : () => respond('HELP_REQUIRED'), onEmergency: busy ? null : emergency,
+        ),
+        if (active != null) TextButton(onPressed: busy ? null : () => respond('UNABLE_TO_EXIT'), child: const Text('No puedo salir del lugar donde estoy')),
+        const SizedBox(height: 18),
+        FilledButton.icon(onPressed: busy ? null : capture, icon: const Icon(Icons.my_location), label: const Text('Guardar mi ubicación'), style: FilledButton.styleFrom(backgroundColor: const Color(0xff4d795f), padding: const EdgeInsets.all(14))),
+        Text(checkpoint == null ? 'Aún no tienes una ubicación guardada. Guárdala para recibir avisos relevantes para tu zona.' : savedAt == null ? 'Tu última ubicación se recuperó de forma segura.' : 'Última ubicación guardada: ${savedAt.day}/${savedAt.month} ${savedAt.hour.toString().padLeft(2, '0')}:${savedAt.minute.toString().padLeft(2, '0')}.', style: const TextStyle(color: Colors.black54)),
+        const SizedBox(height: 8),
+        OutlinedButton.icon(onPressed: () => Navigator.pushNamed(context, '/safety'), icon: const Icon(Icons.shield_outlined), label: const Text('Modo seguridad')),
+        if (me?['role'] == 'ADMIN') ...[
+          const SizedBox(height: 24), const Text('Laboratorio de pruebas', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+          const Text('Simulacro identificado como prueba. Solo avisa a administradores cercanos.'),
+          Align(alignment: Alignment.centerLeft, child: ActionChip(label: const Text('Simular sismo'), onPressed: busy ? null : simulate)),
         ],
-        const SizedBox(height: 22),
-        const Text('Mis notificaciones', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
-        ...notes.where((n) => n['id'] != alert?['id']).take(5).map((n) => Card(child: ListTile(
-          leading: const Icon(Icons.notifications_none),
-          title: Text(n['title']?.toString() ?? 'Notificación'),
-          subtitle: Text(n['body']?.toString() ?? ''),
-        ))),
-      ]),
-    );
+        const SizedBox(height: 24), const Text('Notificaciones', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+        ...notes.where((x) => x['type'] != 'SAFETY_CHECK' && x['type'] != 'WELFARE_CHECK').take(5).map((x) => Card(child: ListTile(leading: const Icon(Icons.notifications_none), title: Text(x['title'] ?? 'Aviso'), subtitle: Text(x['body'] ?? '')))),
+      ],
+    ));
   }
 }
